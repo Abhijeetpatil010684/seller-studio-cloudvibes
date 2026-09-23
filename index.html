@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seller Studio V7.5 - CloudVibes Amazon First</title>
+<style>
+:root{--bg:#f7f5f0;--panel:#fff;--panel2:#fbfaf7;--text:#4d5751;--muted:#7c837f;--line:#e6e1d8;--sage:#eaf3ed;--sageText:#55705e;--blue:#edf4f8;--blueText:#5f7e99;--beige:#f7f0e5;--beigeText:#826d49;--coral:#faefed;--coralText:#9d6259;--shadow:0 8px 24px rgba(90,82,70,.06)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}.side{background:#f1eee7;border-right:1px solid var(--line);padding:20px 14px}.brand{font-size:21px;font-weight:850;color:#64766a;padding:8px 10px 24px}.brand span{color:#b99c69}
+.nav button{display:block;width:100%;border:0;background:transparent;color:#69716c;text-align:left;padding:11px 12px;border-radius:11px;margin:4px 0;cursor:pointer;font-size:14px}.nav button.active,.nav button:hover{background:#fff;color:#56665c;box-shadow:0 3px 10px rgba(80,90,82,.05)}
+.main{padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.top h1{margin:0;font-size:24px;color:#526057}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;color:#59625d;padding:9px 12px;border-radius:10px;font-weight:700;cursor:pointer}.btn.primary{background:var(--sage);border-color:#d9e6dc;color:var(--sageText)}.btn.blue{background:var(--blue);border-color:#dbe7ef;color:var(--blueText)}.btn.warn{background:var(--beige);border-color:#eadbc3;color:var(--beigeText)}.btn.danger{background:var(--coral);border-color:#efd8d4;color:var(--coralText)}
+.page{display:none}.page.active{display:block}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow)}.grid{display:grid;gap:15px}.four{grid-template-columns:repeat(4,1fr)}.five{grid-template-columns:repeat(5,1fr)}.two{grid-template-columns:1.15fr .85fr}
+.kpi .label{font-size:12px;color:var(--muted);margin-bottom:7px}.kpi .value{font-size:26px;font-weight:850;color:#536159}.kpi .note{font-size:11px;color:var(--muted);margin-top:4px}
+.hero{background:linear-gradient(135deg,#fff,#f2efe8);border:1px solid var(--line);border-radius:18px;padding:20px}.hero h2{margin:0 0 6px;color:#59675f}.hero p{margin:0;color:#7c837f;font-size:13px}
+.title{font-size:16px;font-weight:800;color:#56635b;margin-bottom:10px}.small{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:11px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{background:#faf8f4;color:#717973}tr:hover td{background:#fcfbf8}
+.thumb{width:44px;height:44px;border-radius:9px;object-fit:cover;border:1px solid var(--line);background:#f2f0eb}.placeholder{display:flex;align-items:center;justify-content:center}.pcell{display:flex;gap:10px;align-items:center}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:750}.amazon{background:#eef4f9;color:#5f7e99}.sidech{background:#f7f0e5;color:#826d49}.ok{background:var(--sage);color:var(--sageText)}.warnb{background:var(--beige);color:var(--beigeText)}.bad{background:var(--coral);color:var(--coralText)}
+.empty{padding:30px;text-align:center;border:1px dashed #ddd7cd;border-radius:14px;color:var(--muted);background:#fcfbf8}
+.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;color:var(--muted)}.input,select{width:100%;border:1px solid #ded8ce;background:#fff;border-radius:10px;padding:10px 11px;font-size:13px;color:#49524d}.form2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.form3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.sum{background:#fbfaf7;border:1px solid var(--line);border-radius:14px;padding:13px}.sumrow{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}.sumrow.total{border-top:1px solid var(--line);padding-top:10px;margin-top:4px;font-weight:850}
+.modal{position:fixed;inset:0;background:rgba(87,80,69,.22);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}.modal.show{display:flex}.modalbox{width:min(860px,100%);max-height:90vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:19px;box-shadow:0 16px 50px rgba(90,80,65,.15)}
+.checkrow{display:grid;grid-template-columns:28px 1fr 90px 120px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}.alert{padding:11px 13px;border-radius:12px;background:var(--beige);color:#786649;border:1px solid #e8dbc5;font-size:13px}.reportgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+@media(max-width:1050px){.app{grid-template-columns:1fr}.four,.five,.two,.form2,.form3,.reportgrid{grid-template-columns:1fr}.nav{display:grid;grid-template-columns:repeat(2,1fr)}}
+
+/* V7.5 compact layout — font sizes intentionally unchanged */
+.app{grid-template-columns:205px 1fr}
+.side{padding:14px 10px}
+.brand{padding:6px 8px 16px}
+.nav button{padding:8px 10px;border-radius:9px;margin:2px 0}
+.main{padding:16px}
+.top{margin-bottom:12px}
+.card{border-radius:13px;padding:12px}
+.grid{gap:10px}
+.hero{border-radius:14px;padding:14px}
+.btn{padding:7px 10px;border-radius:9px}
+th,td{padding:7px}
+.thumb{width:36px;height:36px}
+.form2,.form3{gap:8px}
+.field{gap:4px}
+.input,select{padding:8px 9px}
+.sum{padding:9px;border-radius:11px}
+.sumrow{padding:4px 0}
+.table-scroll{width:100%;overflow:auto}
+
+</style>
+
+<style id="compact-layout-v74">
+/* V7.4 compact layout — typography intentionally unchanged */
+.app{grid-template-columns:205px 1fr}
+.side{padding:14px 10px}
+.brand{padding:6px 8px 16px}
+.nav button{padding:8px 10px;margin:2px 0;border-radius:9px}
+.main{padding:16px}
+.top{gap:8px;margin-bottom:12px}
+.actions{gap:6px}
+.btn{padding:7px 10px;border-radius:9px}
+.card{padding:12px;border-radius:13px}
+.grid{gap:10px}
+.hero{padding:14px;border-radius:14px}
+.title{margin-bottom:7px}
+th,td{padding:7px 7px}
+.thumb{width:36px;height:36px}
+.pcell{gap:7px}
+.empty{padding:20px}
+.field{gap:4px}
+.input,select{padding:8px 9px}
+.form2,.form3{gap:8px}
+.row{gap:6px}
+.sum{padding:9px;border-radius:11px}
+.sumrow{padding:4px 0}
+.modal{padding:14px}
+.modalbox{padding:14px;border-radius:14px}
+.checkrow{grid-template-columns:24px 1fr 82px 105px;gap:6px;padding:5px 0}
+.alert{padding:8px 10px;border-radius:10px}
+.reportgrid{gap:10px}
+.page > .grid[style*="margin-top"],.page > .card[style*="margin-top"]{margin-top:10px!important}
+.card [style*="margin-top:12px"],.card [style*="margin-top:14px"]{margin-top:8px!important}
+.card [style*="margin-bottom:10px"]{margin-bottom:7px!important}
+#inventoryTable,#purchasesTable,#ordersTable,#dashboardProducts,#productReport,#channelReport{width:100%;overflow-x:auto}
+.kpi{min-height:0}
+@media(max-width:1050px){.app{grid-template-columns:1fr}.main{padding:12px}.side{padding:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+<div class="brand">Seller<span>Studio</span></div>
+<div class="nav">
+<button class="active" data-page="dashboard">Dashboard</button>
+<button data-page="inventory">Master Inventory</button>
+<button data-page="purchases">Purchase Register</button>
+<button data-page="setup">Product Setup</button>
+<button data-page="orders">Order / Sales Register</button>
+<button data-page="reports">Reports</button>
+<button data-page="settings">Settings</button>
+</div>
+</aside>
+<main class="main">
+<div class="top">
+<h1 id="pageTitle">Dashboard</h1>
+<div class="actions"><button class="btn primary" onclick="openItemModal()">+ Add Inventory Item</button><button class="btn warn" onclick="openPurchaseModal()">+ Record Purchase</button><button class="btn blue" onclick="openOrderModal('received')">+ Order Received</button></div>
+</div>
+
+<section class="page active" id="dashboard">
+<div class="hero"><h2>Amazon-first seller control</h2><p>Amazon remains the core sales channel. Offline, WhatsApp, Website and other marketplace orders share the same inventory and profit engine.</p></div>
+<div class="grid five" style="margin-top:15px">
+<div class="card kpi"><div class="label">Current Inventory Value</div><div class="value" id="kInventoryValue">₹0</div><div class="note">Products + packaging</div></div>
+<div class="card kpi"><div class="label">Amazon Sales</div><div class="value" id="kAmazonSales">₹0</div><div class="note">Primary channel</div></div>
+<div class="card kpi"><div class="label">Amazon Profit</div><div class="value" id="kAmazonProfit">₹0</div><div class="note">Net tracked profit</div></div>
+<div class="card kpi"><div class="label">Other Channel Sales</div><div class="value" id="kOtherSales">₹0</div><div class="note">Offline + social + website</div></div>
+<div class="card kpi"><div class="label">Total Profit</div><div class="value" id="kProfit">₹0</div><div class="note">All channels</div></div>
+</div>
+<div class="grid four" style="margin-top:15px">
+<div class="card kpi"><div class="label">Total Sales</div><div class="value" id="kSales">₹0</div></div>
+<div class="card kpi"><div class="label">Amazon Units</div><div class="value" id="kAmazonUnits">0</div></div>
+<div class="card kpi"><div class="label">Other Units</div><div class="value" id="kOtherUnits">0</div></div>
+<div class="card kpi"><div class="label">Total Units Sold</div><div class="value" id="kOrders">0</div></div>
+</div>
+<div class="card" style="margin-top:15px"><div class="title">Product-wise Position</div><div class="table-scroll" id="dashboardProducts"></div></div>
+</section>
+
+<section class="page" id="inventory">
+<div class="card"><div class="row" style="justify-content:space-between"><div><div class="title">Master Inventory</div><div class="small">Products and supporting materials live in one inventory register.</div></div><div class="row"><button class="btn primary" onclick="openItemModal()">+ Add Item</button><button class="btn warn" onclick="openPurchaseModal()">+ Record Purchase</button><button class="btn blue" onclick="importCloudVibesProducts()">Refresh CloudVibes Products</button></div></div><div class="table-scroll" id="inventoryTable" style="margin-top:12px"></div></div>
+</section>
+
+
+<section class="page" id="purchases">
+<div class="card">
+<div class="row" style="justify-content:space-between">
+<div><div class="title">Purchase Register</div><div class="small">Track when products and packaging were purchased, at what rate, and from whom.</div></div>
+<button class="btn warn" onclick="openPurchaseModal()">+ Record Purchase</button>
+</div>
+<div class="table-scroll" id="purchasesTable" style="margin-top:12px"></div>
+</div>
+</section>
+
+<section class="page" id="setup">
+<div class="grid two">
+<div class="card"><div class="title">Product Setup</div><div class="small" style="margin-bottom:10px">Define once what is needed to sell one unit.</div><div class="field"><label>Select Product</label><select id="setupProduct" onchange="renderSetup()"></select></div><div id="setupMaterials" style="margin-top:12px"></div></div>
+<div class="card"><div class="title">Amazon Cost Preview</div><div id="setupCostPreview"></div></div>
+</div>
+</section>
+
+<section class="page" id="orders">
+<div class="card">
+<div class="row" style="justify-content:space-between"><div><div class="title">Order / Sales Register</div><div class="small">Amazon is the default channel; side-channel orders use the same stock and cost engine.</div></div>
+<div class="row"><button class="btn blue" onclick="openOrderModal('received')">+ Order Received</button><button class="btn warn" onclick="openManageOrderModal()">Update Existing Order</button></div></div>
+<div class="table-scroll" id="ordersTable" style="margin-top:12px"></div>
+</div>
+</section>
+
+<section class="page" id="reports">
+<div class="reportgrid">
+<div class="card kpi"><div class="label">Current Product Stock Value</div><div class="value" id="rProductValue">₹0</div></div>
+<div class="card kpi"><div class="label">Current Packaging Stock Value</div><div class="value" id="rPackagingValue">₹0</div></div>
+<div class="card kpi"><div class="label">Average Profit / Order</div><div class="value" id="rAvgProfit">₹0</div></div>
+</div>
+<div class="card" style="margin-top:15px"><div class="title">Sales by Channel</div><div class="table-scroll" id="channelReport"></div></div>
+<div class="grid two" style="margin-top:15px"><div class="card"><div class="title">Product Performance</div><div class="table-scroll" id="productReport"></div></div><div class="card"><div class="title">Low Stock / Constraints</div><div id="stockAlerts"></div></div></div>
+</section>
+
+<section class="page" id="settings">
+<div class="grid two">
+<div class="card"><div class="title">Amazon Cost Settings — Primary Channel</div><div class="form3">
+<div class="field"><label>Fulfilment / Closing Cost per Unit</label><input id="sFulfil" class="input" type="number" step="0.01"></div>
+<div class="field"><label>Marketplace / Referral Fee per Unit</label><input id="sMarketplace" class="input" type="number" step="0.01"></div>
+<div class="field"><label>Transportation Cost per Unit</label><input id="sTransport" class="input" type="number" step="0.01"></div>
+</div><div class="small" style="margin-top:8px">Manual during testing. Later these can be replaced by Amazon fee/API calculations.</div></div>
+<div class="card"><div class="title">Secondary Channel Defaults</div><div class="small" style="margin-bottom:10px">Defaults only; you can override them on the order.</div><div class="form2">
+<div class="field"><label>Offline / Direct — Delivery per Order</label><input id="sOfflineCourier" class="input" type="number" step="0.01"></div>
+<div class="field"><label>WhatsApp / Instagram — Fee per Order</label><input id="sWhatsappFee" class="input" type="number" step="0.01"></div>
+<div class="field"><label>WhatsApp / Instagram — Courier per Order</label><input id="sWhatsappCourier" class="input" type="number" step="0.01"></div>
+<div class="field"><label>Website — Payment/Channel Fee per Order</label><input id="sWebsiteFee" class="input" type="number" step="0.01"></div>
+<div class="field"><label>Website — Courier per Order</label><input id="sWebsiteCourier" class="input" type="number" step="0.01"></div>
+<div class="field"><label>Other Marketplace — Fee per Unit</label><input id="sOtherMarketFee" class="input" type="number" step="0.01"></div>
+<div class="field"><label>Other Marketplace — Courier per Order</label><input id="sOtherMarketCourier" class="input" type="number" step="0.01"></div>
+</div></div></div>
+<div class="row" style="margin-top:15px"><button class="btn primary" onclick="saveSettings()">Save Channel Settings</button></div>
+<div class="card" style="margin-top:15px"><div class="title">Testing Controls</div><div class="alert">All test data is stored only in this browser.</div><button class="btn danger" style="margin-top:12px" onclick="resetAll()">Delete All Test Data</button></div>
+</section>
+
+</main>
+</div>
+
+<div class="modal" id="itemModal"><div class="modalbox">
+<div class="row" style="justify-content:space-between"><div class="title" id="itemModalTitle">Add Inventory Item</div><button class="btn" onclick="closeModal('itemModal')">×</button></div>
+<div class="form3">
+<div class="field"><label>SKU</label><input id="iSku" class="input"></div>
+<div class="field"><label>Item / Product Name *</label><input id="iName" class="input"></div>
+<div class="field"><label>Category *</label><select id="iCategory"><option>Jewellery</option><option>Packaging</option><option>Paper / Insert</option><option>Other</option></select></div>
+<div class="field"><label>Opening Quantity *</label><input id="iQty" class="input" type="number" min="0"></div>
+<div class="field"><label>Opening Stock Date</label><input id="iDate" class="input" type="date"></div>
+<div class="field"><label>Opening Cost / Unit *</label><input id="iCost" class="input" type="number" min="0" step="0.01"></div>
+<div class="field"><label>Selling Price / Unit</label><input id="iSelling" class="input" type="number" min="0" step="0.01"></div>
+<div class="field"><label>Attach Product Image</label><input id="iImage" class="input" type="file" accept="image/*"></div>
+<div class="field"><label>Reorder Level</label><input id="iReorder" class="input" type="number" min="0" value="5"></div>
+</div>
+<button class="btn primary" style="margin-top:14px" onclick="saveItem()">Save Item</button>
+</div></div>
+
+
+<div class="modal" id="purchaseModal"><div class="modalbox">
+<div class="row" style="justify-content:space-between"><div class="title">Record Inventory Purchase</div><button class="btn" onclick="closeModal('purchaseModal')">×</button></div>
+<div class="form3">
+<div class="field"><label>Purchase Date *</label><input id="pDate" class="input" type="date"></div>
+<div class="field"><label>Item *</label><select id="pItem"></select></div>
+<div class="field"><label>Quantity Purchased *</label><input id="pQty" class="input" type="number" min="1"></div>
+<div class="field"><label>Unit Cost *</label><input id="pUnitCost" class="input" type="number" min="0" step="0.01"></div>
+<div class="field"><label>Other / Freight Cost</label><input id="pOtherCost" class="input" type="number" min="0" step="0.01" value="0"></div>
+<div class="field"><label>Vendor</label><input id="pVendor" class="input"></div>
+<div class="field"><label>Invoice / Reference</label><input id="pReference" class="input"></div>
+</div>
+<div id="purchasePreview" style="margin-top:14px"></div>
+<button class="btn primary" style="margin-top:14px" onclick="savePurchase()">Save Purchase & Add Stock</button>
+</div></div>
+
+<div class="modal" id="orderModal"><div class="modalbox">
+<div class="row" style="justify-content:space-between"><div class="title" id="orderModalTitle">Order Received</div><button class="btn" onclick="closeModal('orderModal')">×</button></div>
+<div class="form3">
+<div class="field"><label>Sales Channel *</label><select id="oChannel" onchange="handleChannelChange()"><option value="Amazon">Amazon</option><option value="Offline / Direct">Offline / Direct</option><option value="WhatsApp / Instagram">WhatsApp / Instagram</option><option value="Website">Website</option><option value="Other Marketplace">Other Marketplace</option></select></div>
+<div class="field"><label>Order ID / Reference *</label><input id="oOrderId" class="input"></div>
+<div class="field"><label>Date *</label><input id="oDate" class="input" type="date"></div>
+<div class="field"><label>Product *</label><select id="oProduct" onchange="refreshOrderPreview()"></select></div>
+<div class="field"><label>Quantity *</label><input id="oQty" class="input" type="number" min="1" value="1" oninput="quantityChanged()"></div>
+<div class="field"><label>Selling Price / Unit</label><input id="oSelling" class="input" type="number" step="0.01" oninput="refreshOrderPreview()"></div>
+<div class="field"><label>Channel / Marketplace Fee</label><input id="oChannelFee" class="input" type="number" step="0.01" oninput="markChannelOverride();refreshOrderPreview()"></div>
+<div class="field"><label>Courier / Transportation</label><input id="oCourier" class="input" type="number" step="0.01" oninput="markChannelOverride();refreshOrderPreview()"></div>
+<div class="field"><label>Other Expense / Order</label><input id="oOther" class="input" type="number" step="0.01" value="0" oninput="refreshOrderPreview()"></div>
+</div>
+<div id="channelHint" class="small" style="margin-top:10px"></div>
+<div id="orderPreview" style="margin-top:14px"></div>
+<button class="btn primary" style="margin-top:14px" onclick="confirmOrder()">Confirm New Order</button>
+</div></div>
+
+<div class="modal" id="manageOrderModal"><div class="modalbox">
+<div class="row" style="justify-content:space-between"><div class="title">Update Existing Order</div><button class="btn" onclick="closeModal('manageOrderModal')">×</button></div>
+<div class="form3">
+<div class="field"><label>Existing Order *</label><select id="mOrder" onchange="refreshManageOrder()"></select></div>
+<div class="field"><label>Action *</label><select id="mAction" onchange="refreshManageOrder()"><option value="return">Return</option><option value="cancel">Cancel Order</option></select></div>
+<div class="field" id="mReturnQtyField"><label>Return Quantity</label><input id="mReturnQty" class="input" type="number" min="1" value="1" oninput="refreshManageOrder()"></div>
+<div class="field" id="mResellableField"><label>Returned Product</label><select id="mResellable" onchange="refreshManageOrder()"><option value="yes">Resellable — add back to stock</option><option value="no">Damaged / not resellable</option></select></div>
+</div>
+<div id="manageOrderPreview" style="margin-top:14px"></div>
+<button class="btn primary" style="margin-top:14px" onclick="confirmOrderUpdate()">Confirm Update</button>
+</div></div>
+
+<script>
+const KEY='sellerStudioV75CloudVibes';
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||{items:[],purchases:[],orders:[],settings:{fulfilment:0,marketplace:0,transport:0,offlineCourier:0,whatsappFee:0,whatsappCourier:0,websiteFee:0,websiteCourier:0,otherMarketFee:0,otherMarketCourier:0}};
+if(!db.purchases)db.purchases=[];
+const CLOUDVIBES_PRODUCTS=[{"id":"CLOUDVIBES-001","sku":"CV-001","asin":"","name":"Handcrafted Zendu Flowers Haar Marigold Garland 45 cm","category":"Jewellery","subCategory":"Garland","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":498.0,"mrp":599.0,"reorder":5,"image":"assets/cloudvibes/01_Handcrafted_Zendu_Flowers_Haar_Marigold_Garland_45_cm.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-002","sku":"CV-002","asin":"","name":"Traditional Maharashtrian Pearl Bangles","category":"Jewellery","subCategory":"Bangles","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":499.0,"mrp":790.0,"reorder":5,"image":"assets/cloudvibes/02_Traditional_Maharashtrian_Pearl_Bangles.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-003","sku":"CV-003","asin":"","name":"Handmade Chenille Daisy Flower Bag Charm and Keychain- PACK of 5","category":"Jewellery","subCategory":"Accessories","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":289.0,"mrp":299.0,"reorder":5,"image":"assets/cloudvibes/03_Handmade_Chenille_Daisy_Flower_Bag_Charm_and_Keychain_PACK_of_5.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-004","sku":"CV-004","asin":"B0H9NXL9FN","name":"Traditional Floral Pearl & Green Stone Double Line Mangalsutra","category":"Jewellery","subCategory":"Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":449.0,"mrp":599.0,"reorder":5,"image":"assets/cloudvibes/04_Traditional_Floral_Pearl_Green_Stone_Double_Line_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-005","sku":"CV-005","asin":"","name":"Traditional Maharashtrian Necklace, Nathani with pair of Earrings Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":749.0,"mrp":1999.0,"reorder":5,"image":"assets/cloudvibes/05_Traditional_Maharashtrian_Necklace_Nathani_with_pair_of_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-006","sku":"CV-006","asin":"","name":"Traditional Maharashtrian Floral Pearl Bangle","category":"Jewellery","subCategory":"Bangles","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/06_Traditional_Maharashtrian_Floral_Pearl_Bangle.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-007","sku":"CV-007","asin":"B0HCM5T594","name":"Traditional Maharashtrian Necklace and Earrings Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/07_Traditional_Maharashtrian_Necklace_and_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-008","sku":"CV-008","asin":"B0H9NYQXNB","name":"Traditional Double Line Black Bead Pearl Floral Mangalsutra","category":"Jewellery","subCategory":"Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":399.0,"mrp":599.0,"reorder":5,"image":"assets/cloudvibes/08_Traditional_Double_Line_Black_Bead_Pearl_Floral_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-009","sku":"CV-009","asin":"B0H9MRK6YK","name":"Traditional Double Line Black Bead Peacock Mangalsutra","category":"Jewellery","subCategory":"Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":449.0,"mrp":699.0,"reorder":5,"image":"assets/cloudvibes/09_Traditional_Double_Line_Black_Bead_Peacock_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-010","sku":"CV-010","asin":"","name":"Traditional Maharashtrian Angathi Set for Women","category":"Jewellery","subCategory":"Ring Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":219.0,"mrp":329.0,"reorder":5,"image":"assets/cloudvibes/10_Traditional_Maharashtrian_Angathi_Set_for_Women.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-011","sku":"CV-011","asin":"B0H9JP6LN5","name":"Pearl Necklace with Ruby Red Floral Pendant","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":429.0,"reorder":5,"image":"assets/cloudvibes/11_Pearl_Necklace_with_Ruby_Red_Floral_Pendant.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-012","sku":"CV-012","asin":"B0H9JP634N","name":"Traditional Maharashtrian Moti Floral Necklace Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/12_Traditional_Maharashtrian_Moti_Floral_Necklace_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-013","sku":"CV-013","asin":"B0H9JP2QHS","name":"Chandrakor Pendant Necklace with Green Crystal & Pearls","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/13_Chandrakor_Pendant_Necklace_with_Green_Crystal_Pearls.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-014","sku":"CV-014","asin":"","name":"Emerald Green Teardrop Necklace Set with Matching Earrings","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":429.0,"mrp":499.0,"reorder":5,"image":"assets/cloudvibes/14_Emerald_Green_Teardrop_Necklace_Set_with_Matching_Earrings.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-015","sku":"CV-015","asin":"B0H9HWTFVX","name":"Pearl Necklace with Ruby Teardrop Pendant Gold-Plated Chain","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/15_Pearl_Necklace_with_Ruby_Teardrop_Pendant_Gold_Plated_Chain.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-016","sku":"CV-016","asin":"B0H9HTJRXY","name":"Royal Chandrika Necklace","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/16_Royal_Chandrika_Necklace.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-017","sku":"CV-017","asin":"B0H9HT5C2R","name":"Ruby Bloom Floral Mangalsutra with Black Beads","category":"Jewellery","subCategory":"Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/17_Ruby_Bloom_Floral_Mangalsutra_with_Black_Beads.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-018","sku":"CV-018","asin":"B0H9HFXC99","name":"Pearl Flower Pendant Necklace with Green Stone Gold-Toned","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":419.0,"reorder":5,"image":"assets/cloudvibes/18_Pearl_Flower_Pendant_Necklace_with_Green_Stone_Gold_Toned.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-019","sku":"CV-019","asin":"","name":"Lotus Pearl Kundan Choker Necklace and Earrings Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":399.0,"mrp":549.0,"reorder":5,"image":"assets/cloudvibes/19_Lotus_Pearl_Kundan_Choker_Necklace_and_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-020","sku":"CV-020","asin":"B0H9G3GKVG","name":"Single Line Fancy Mangalsutra","category":"Jewellery","subCategory":"Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/20_Single_Line_Fancy_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-021","sku":"CV-021","asin":"","name":"Traditional Maharashtrian Necklace and Earrings Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":899.0,"reorder":5,"image":"assets/cloudvibes/21_Traditional_Maharashtrian_Necklace_and_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-022","sku":"CV-022","asin":"","name":"Traditional Nathani Nose Pin Set","category":"Jewellery","subCategory":"Nose Pin Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":875.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/22_Traditional_Nathani_Nose_Pin_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-023","sku":"CV-023","asin":"","name":"Traditional Maharashtrian Jewellery Set","category":"Jewellery","subCategory":"Jewellery Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":849.0,"mrp":1149.0,"reorder":5,"image":"assets/cloudvibes/23_Traditional_Maharashtrian_Jewellery_Set.jpg","recipe":[],"source":"CloudVibes Amazon"}];
+function importCloudVibesProducts(silent=false){
+ let added=0,updated=0;
+ CLOUDVIBES_PRODUCTS.forEach(seed=>{
+   const existing=db.items.find(x=>x.sku===seed.sku || (seed.asin && x.asin===seed.asin));
+   if(existing){
+     // Never overwrite purchase/inventory history. Refresh only Amazon listing details.
+     existing.name=seed.name;
+     existing.asin=seed.asin||existing.asin||'';
+     existing.mrp=seed.mrp;
+     existing.sellingPrice=seed.sellingPrice;
+     existing.image=seed.image;
+     existing.subCategory=seed.subCategory;
+     existing.source='CloudVibes Amazon';
+     updated++;
+   }else{
+     db.items.push({...seed});
+     added++;
+   }
+ });
+ localStorage.setItem(KEY,JSON.stringify(db));
+ renderAll();
+ if(!silent)alert(`CloudVibes updated: ${added} new products, ${updated} existing listings refreshed. Purchase cost and stock were not overwritten.`);
+}
+if(!db.items.some(x=>x.source==='CloudVibes Amazon')){
+ CLOUDVIBES_PRODUCTS.forEach(seed=>db.items.push({...seed}));
+ localStorage.setItem(KEY,JSON.stringify(db));
+}
+let editItemId=null,currentOrderAction='received';
+function money(n){return '₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function persist(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function itemById(id){return db.items.find(x=>x.id===id)}
+function isProduct(x){return x.category==='Jewellery'}
+function products(){return db.items.filter(isProduct)}
+function packagingItems(){return db.items.filter(x=>!isProduct(x))}
+function thumb(x){return x.image?`<img class="thumb" src="${x.image}">`:`<div class="thumb placeholder">📦</div>`}
+
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.querySelectorAll('[data-page]').forEach(x=>x.classList.remove('active'));
+b.classList.add('active');document.getElementById(b.dataset.page).classList.add('active');
+pageTitle.textContent={dashboard:'Dashboard',inventory:'Master Inventory',purchases:'Purchase Register',setup:'Product Setup',orders:'Order / Sales Register',reports:'Reports',settings:'Settings'}[b.dataset.page];
+renderAll();
+});
+
+function getImage(cb){const f=iImage.files[0];if(!f)return cb(null);const r=new FileReader();r.onload=e=>cb(e.target.result);r.readAsDataURL(f)}
+function openItemModal(id=null){
+editItemId=id;const x=id?itemById(id):null;
+itemModalTitle.textContent=x?'Edit Inventory Item':'Add Inventory Item';
+iSku.value=x?.sku||'';iName.value=x?.name||'';iCategory.value=x?.category||'Jewellery';iQty.value=x?.openingQty??'';iDate.value=x?.openingDate||new Date().toISOString().slice(0,10);iCost.value=x?.openingCost??x?.purchaseCost??'';iSelling.value=x?.sellingPrice??'';iReorder.value=x?.reorder??5;iImage.value='';itemModal.classList.add('show');
+}
+function recalcAverageCost(itemId){
+ const x=itemById(itemId);if(!x)return;
+ const ps=db.purchases.filter(p=>p.itemId===itemId);
+ const qty=ps.reduce((s,p)=>s+(+p.qty||0),0);
+ const val=ps.reduce((s,p)=>s+(+p.total||0),0);
+ if(qty>0)x.purchaseCost=val/qty;
+ else x.purchaseCost=+x.openingCost||0;
+}
+function upsertOpeningPurchase(x){
+ let op=db.purchases.find(p=>p.itemId===x.id&&p.type==='opening');
+ if((+x.openingQty||0)>0){
+   if(!op){
+     op={id:'OPEN-'+x.id,type:'opening',itemId:x.id,itemName:x.name,date:x.openingDate||new Date().toISOString().slice(0,10),qty:x.openingQty,unitCost:x.openingCost,total:x.openingQty*x.openingCost,otherCost:0,vendor:'Opening Stock',reference:'Initial entry'};
+     db.purchases.push(op);
+   }else{
+     op.itemName=x.name;op.date=x.openingDate;op.qty=x.openingQty;op.unitCost=x.openingCost;op.total=x.openingQty*x.openingCost;
+   }
+ }else if(op){
+   db.purchases=db.purchases.filter(p=>p.id!==op.id);
+ }
+ recalcAverageCost(x.id);
+}
+function saveItem(){
+ if(!iName.value.trim())return alert('Item name is required');
+ const qty=+iQty.value||0,cost=+iCost.value||0,openDate=iDate.value||new Date().toISOString().slice(0,10);
+ getImage(img=>{
+   if(editItemId){
+     const x=itemById(editItemId),delta=qty-(x.openingQty||0);
+     x.stock=(x.stock||0)+delta;
+     x.openingQty=qty;x.openingDate=openDate;x.openingCost=cost;
+     x.sku=iSku.value.trim();x.name=iName.value.trim();x.category=iCategory.value;
+     x.sellingPrice=+iSelling.value||0;x.reorder=+iReorder.value||0;if(x.mrp==null)x.mrp=0;if(x.asin==null)x.asin='';if(img)x.image=img;
+     upsertOpeningPurchase(x);
+   }else{
+     const id=Date.now().toString();
+     const x={id,sku:iSku.value.trim(),asin:'',name:iName.value.trim(),category:iCategory.value,subCategory:'',openingQty:qty,openingDate:openDate,openingCost:cost,stock:qty,purchaseCost:cost,sellingPrice:+iSelling.value||0,mrp:0,reorder:+iReorder.value||0,image:img||'',recipe:[]};
+     db.items.push(x);upsertOpeningPurchase(x);
+   }
+   closeModal('itemModal');persist();
+ });
+}
+function deleteItem(id){if(!confirm('Delete this item and its purchase history? Existing historical orders will remain unchanged.'))return;db.items=db.items.filter(x=>x.id!==id);db.purchases=db.purchases.filter(p=>p.itemId!==id);db.items.forEach(p=>p.recipe=(p.recipe||[]).filter(r=>r.itemId!==id));persist()}
+function soldQty(itemId){
+let used=0;
+db.orders.forEach(o=>{
+ const st=orderStatus(o);if(st==='cancelled')return;
+ if(o.productId===itemId)used+=(+o.qty||0)-(+o.returnedResellableQty||0);
+ (o.packaging||[]).forEach(r=>{if(r.itemId===itemId)used+=+r.qty||0});
+});
+return Math.max(0,used);
+}
+function openingValue(x){return (x.openingQty||0)*((x.openingCost??x.purchaseCost)||0)}
+function currentValue(x){return (x.stock||0)*(x.purchaseCost||0)}
+
+
+function purchasedQty(itemId){
+ return db.purchases.filter(p=>p.itemId===itemId&&p.type!=='opening').reduce((s,p)=>s+(+p.qty||0),0);
+}
+function lastPurchaseDate(itemId){
+ const ps=db.purchases.filter(p=>p.itemId===itemId&&p.type!=='opening').sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ return ps.length?ps[0].date:'-';
+}
+function openPurchaseModal(itemId=null){
+ if(!db.items.length)return alert('Add an inventory item first.');
+ pDate.value=new Date().toISOString().slice(0,10);
+ pItem.innerHTML=db.items.map(x=>`<option value="${x.id}">${esc(x.name)} — ${esc(x.category)}</option>`).join('');
+ if(itemId&&db.items.some(x=>x.id===itemId))pItem.value=itemId;
+ pQty.value='';pUnitCost.value='';pOtherCost.value=0;pVendor.value='';pReference.value='';
+ refreshPurchasePreview();
+ [pQty,pUnitCost,pOtherCost].forEach(el=>el.oninput=refreshPurchasePreview);
+ pItem.onchange=refreshPurchasePreview;
+ purchaseModal.classList.add('show');
+}
+function refreshPurchasePreview(){
+ const x=itemById(pItem.value),q=+pQty.value||0,r=+pUnitCost.value||0,o=+pOtherCost.value||0;
+ const total=q*r+o;
+ purchasePreview.innerHTML=`<div class="sum">
+  <div class="sumrow"><span>Item</span><strong>${x?esc(x.name):'-'}</strong></div>
+  <div class="sumrow"><span>Current Stock</span><strong>${x?x.stock:0}</strong></div>
+  <div class="sumrow"><span>Purchase Value</span><strong>${money(q*r)}</strong></div>
+  <div class="sumrow"><span>Other / Freight</span><strong>${money(o)}</strong></div>
+  <div class="sumrow total"><span>Total Purchase Cost</span><strong>${money(total)}</strong></div>
+ </div>`;
+}
+function savePurchase(){
+ const x=itemById(pItem.value),q=+pQty.value||0,r=+pUnitCost.value||0,o=+pOtherCost.value||0;
+ if(!x)return alert('Select an item');
+ if(!pDate.value)return alert('Purchase date is required');
+ if(q<=0)return alert('Quantity must be greater than zero');
+ const total=q*r+o;
+ const oldStock=+x.stock||0,oldAvg=+x.purchaseCost||0;x.stock=oldStock+q;const newValue=oldStock*oldAvg+total;x.purchaseCost=x.stock>0?newValue/x.stock:r;
+ db.purchases.unshift({
+   id:Date.now().toString(),type:'purchase',itemId:x.id,itemName:x.name,date:pDate.value,qty:q,unitCost:r,otherCost:o,total,
+   vendor:pVendor.value.trim(),reference:pReference.value.trim(),balanceAfter:x.stock
+ });
+ closeModal('purchaseModal');persist();
+}
+function renderPurchases(){
+ const ps=[...db.purchases].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ purchasesTable.innerHTML=ps.length?`<table>
+ <tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Unit Cost</th><th>Other / Freight</th><th>Total</th><th>Vendor</th><th>Invoice / Ref</th><th>Stock After</th></tr>
+ ${ps.map(p=>{const x=itemById(p.itemId);return `<tr>
+   <td>${esc(p.date||'-')}</td>
+   <td><strong>${esc(p.itemName||x?.name||'-')}</strong></td>
+   <td>${p.type==='opening'?'<span class="badge ok">Opening</span>':'<span class="badge warnb">Purchase</span>'}</td>
+   <td>${p.qty||0}</td><td>${money(p.unitCost)}</td><td>${money(p.otherCost)}</td><td>${money(p.total)}</td>
+   <td>${esc(p.vendor||'-')}</td><td>${esc(p.reference||'-')}</td><td>${p.balanceAfter??'-'}</td>
+ </tr>`}).join('')}
+ </table>`:'<div class="empty">No purchase history yet.</div>';
+}
+
+function renderInventory(){
+ inventoryTable.innerHTML=db.items.length?`<table>
+ <tr><th>Image</th><th>SKU</th><th>ASIN</th><th>Product / Material</th><th>Category</th><th>Opening Qty</th><th>Purchased Qty</th><th>Avg Purchase Cost</th><th>Amazon Price</th><th>MRP</th><th>Used / Sold</th><th>Balance Qty</th><th>Current Value</th><th>Last Purchase</th><th></th></tr>
+ ${db.items.map(x=>`<tr>
+   <td>${thumb(x)}</td>
+   <td>${esc(x.sku||'-')}</td>
+   <td>${esc(x.asin||'-')}</td>
+   <td><strong>${esc(x.name)}</strong>${x.source==='CloudVibes Amazon'?'<div class="small">CloudVibes Amazon</div>':''}</td>
+   <td>${esc(x.subCategory||x.category)}</td>
+   <td>${x.openingQty||0}</td>
+   <td>${purchasedQty(x.id)}</td>
+   <td>${money(x.purchaseCost)}</td>
+   <td>${isProduct(x)?money(x.sellingPrice):'-'}</td>
+   <td>${isProduct(x)&&x.mrp?money(x.mrp):'-'}</td>
+   <td>${soldQty(x.id)}</td>
+   <td><strong>${x.stock||0}</strong></td>
+   <td>${money(currentValue(x))}</td>
+   <td>${esc(lastPurchaseDate(x.id))}</td>
+   <td><div class="row"><button class="btn warn" onclick="openPurchaseModal('${x.id}')">Buy</button><button class="btn" onclick="openItemModal('${x.id}')">Edit</button><button class="btn danger" onclick="deleteItem('${x.id}')">Delete</button></div></td>
+ </tr>`).join('')}
+ </table>`:'<div class="empty">No inventory yet.</div>';
+}
+function refreshSetupProducts(){const cur=setupProduct.value;setupProduct.innerHTML=products().map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');if(cur&&products().some(p=>p.id===cur))setupProduct.value=cur}
+function renderSetup(){
+const p=itemById(setupProduct.value);
+if(!p){setupMaterials.innerHTML='<div class="empty">Add a Jewellery product first.</div>';setupCostPreview.innerHTML='';return}
+const mats=packagingItems();
+setupMaterials.innerHTML=mats.length?mats.map(m=>{const existing=(p.recipe||[]).find(r=>r.itemId===m.id);return `<div class="checkrow"><input type="checkbox" ${existing?'checked':''} onchange="toggleRecipe('${p.id}','${m.id}',this.checked)"><div><strong>${esc(m.name)}</strong><div class="small">${esc(m.category)} • Stock ${m.stock}</div></div><input class="input" type="number" min="0" step="0.01" value="${existing?.qty||1}" onchange="changeRecipeQty('${p.id}','${m.id}',this.value)"><div>${money(m.purchaseCost)}</div></div>`}).join(''):'<div class="empty">Add packaging/material inventory first.</div>';
+renderSetupCost();
+}
+function toggleRecipe(pid,mid,on){const p=itemById(pid);p.recipe=p.recipe||[];if(on){if(!p.recipe.some(r=>r.itemId===mid))p.recipe.push({itemId:mid,qty:1})}else p.recipe=p.recipe.filter(r=>r.itemId!==mid);persist()}
+function changeRecipeQty(pid,mid,val){const p=itemById(pid),r=(p.recipe||[]).find(x=>x.itemId===mid);if(r)r.qty=Math.max(0,+val||0);persist()}
+function recipeCost(p){return (p.recipe||[]).reduce((s,r)=>{const m=itemById(r.itemId);return s+(m?(m.purchaseCost||0)*(r.qty||0):0)},0)}
+function amazonUnitCost(){return (+db.settings.fulfilment||0)+(+db.settings.marketplace||0)+(+db.settings.transport||0)}
+function amazonChannelFeePerUnit(){return (+db.settings.fulfilment||0)+(+db.settings.marketplace||0)}
+function channelDefaultCosts(channel,qty){qty=Math.max(1,+qty||1);if(channel==='Amazon')return {fee:amazonChannelFeePerUnit()*qty,courier:(+db.settings.transport||0)*qty};if(channel==='Offline / Direct')return {fee:0,courier:+db.settings.offlineCourier||0};if(channel==='WhatsApp / Instagram')return {fee:+db.settings.whatsappFee||0,courier:+db.settings.whatsappCourier||0};if(channel==='Website')return {fee:+db.settings.websiteFee||0,courier:+db.settings.websiteCourier||0};return {fee:(+db.settings.otherMarketFee||0)*qty,courier:+db.settings.otherMarketCourier||0}}
+function finalUnitCost(p){return (+p.purchaseCost||0)+recipeCost(p)+amazonUnitCost()}
+function expectedProfitUnit(p){return (+p.sellingPrice||0)-finalUnitCost(p)}
+function saleReadyQty(p){let n=p.stock||0;for(const r of (p.recipe||[])){const m=itemById(r.itemId);if(m&&r.qty>0)n=Math.min(n,Math.floor((m.stock||0)/r.qty))}return Math.max(0,n)}
+function renderSetupCost(){const p=itemById(setupProduct.value);if(!p)return;setupCostPreview.innerHTML=`<div class="sum"><div class="sumrow"><span>Product Cost</span><strong>${money(p.purchaseCost)}</strong></div><div class="sumrow"><span>Packaging / Materials</span><strong>${money(recipeCost(p))}</strong></div><div class="sumrow"><span>Amazon Cost</span><strong>${money(amazonUnitCost())}</strong></div><div class="sumrow total"><span>Final Cost / Unit</span><strong>${money(finalUnitCost(p))}</strong></div><div class="sumrow"><span>Selling Price</span><strong>${money(p.sellingPrice)}</strong></div><div class="sumrow"><span>Expected Profit / Unit</span><strong>${money(expectedProfitUnit(p))}</strong></div><div class="sumrow"><span>Sale-ready Quantity</span><strong>${saleReadyQty(p)}</strong></div></div>`}
+
+let channelCostOverridden=false;
+function channelCode(channel){return channel==='Offline / Direct'?'OFF':channel==='WhatsApp / Instagram'?'SOC':channel==='Website'?'WEB':channel==='Other Marketplace'?'MKT':'AMZ'}
+function nextInternalOrderId(channel){const code=channelCode(channel);let max=0;db.orders.forEach(o=>{const m=String(o.orderId||'').match(new RegExp('^'+code+'-(\\d+)$'));if(m)max=Math.max(max,+m[1])});return code+'-'+String(max+1).padStart(4,'0')}
+function markChannelOverride(){channelCostOverridden=true}
+function applyChannelDefaults(){const q=Math.max(1,+oQty.value||1),c=channelDefaultCosts(oChannel.value,q);oChannelFee.value=c.fee.toFixed(2);oCourier.value=c.courier.toFixed(2);channelHint.textContent=oChannel.value==='Amazon'?'Amazon is the primary channel. Fulfilment, marketplace/referral and transportation defaults are applied automatically.':'Secondary channel order. Default fees can be overridden for this order.'}
+function handleChannelChange(){channelCostOverridden=false;if(oChannel.value!=='Amazon')oOrderId.value=nextInternalOrderId(oChannel.value);else if(/^((OFF|SOC|WEB|MKT)-\d+)$/.test(oOrderId.value))oOrderId.value='';applyChannelDefaults();refreshOrderPreview()}
+function quantityChanged(){if(!channelCostOverridden)applyChannelDefaults();refreshOrderPreview()}
+function openOrderModal(action='received'){currentOrderAction='received';orderModalTitle.textContent='Order Received';oChannel.value='Amazon';oOrderId.value='';oDate.value=new Date().toISOString().slice(0,10);oProduct.innerHTML=products().map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');oQty.value=1;oOther.value=0;channelCostOverridden=false;const p=itemById(oProduct.value);oSelling.value=p?.sellingPrice||0;applyChannelDefaults();refreshOrderPreview();orderModal.classList.add('show')}
+function refreshOrderPreview(){const p=itemById(oProduct.value);if(!p){orderPreview.innerHTML='<div class="empty">Add a product first.</div>';return}if(document.activeElement!==oSelling)oSelling.value=p.sellingPrice||0;const q=Math.max(1,+oQty.value||1),unitSelling=+oSelling.value||0,other=+oOther.value||0,prodCost=(p.purchaseCost||0)*q,pack=recipeCost(p)*q,channelFee=+oChannelFee.value||0,courier=+oCourier.value||0,total=prodCost+pack+channelFee+courier+other,revenue=unitSelling*q,profit=revenue-total;orderPreview.innerHTML=`<div class="sum"><div class="sumrow"><span>Channel</span><strong>${esc(oChannel.value)}</strong></div><div class="sumrow"><span>Product Cost</span><strong>${money(prodCost)}</strong></div><div class="sumrow"><span>Packaging</span><strong>${money(pack)}</strong></div><div class="sumrow"><span>Channel / Marketplace Fee</span><strong>${money(channelFee)}</strong></div><div class="sumrow"><span>Courier / Transportation</span><strong>${money(courier)}</strong></div><div class="sumrow"><span>Other Expense</span><strong>${money(other)}</strong></div><div class="sumrow total"><span>Total Expense</span><strong>${money(total)}</strong></div><div class="sumrow"><span>Revenue</span><strong>${money(revenue)}</strong></div><div class="sumrow"><span>Profit</span><strong>${money(profit)}</strong></div></div>`}
+function confirmOrder(){const p=itemById(oProduct.value),q=Math.max(1,+oQty.value||1),channel=oChannel.value;if(!p)return alert('Select a product');let orderId=oOrderId.value.trim();if(!orderId&&channel!=='Amazon'){orderId=nextInternalOrderId(channel);oOrderId.value=orderId}if(!orderId)return alert('Amazon Order ID is required.');if(db.orders.some(o=>String(o.orderId).toLowerCase()===orderId.toLowerCase()))return alert('This Order ID already exists.');if((p.stock||0)<q)return alert('Not enough product stock');for(const r of (p.recipe||[])){const m=itemById(r.itemId);if(!m||(m.stock||0)<r.qty*q)return alert('Not enough '+(m?.name||'packaging material'))}const frozenPackaging=[];(p.recipe||[]).forEach(r=>{const m=itemById(r.itemId),used=r.qty*q;m.stock-=used;frozenPackaging.push({itemId:m.id,name:m.name,qty:used,unitCost:m.purchaseCost,total:m.purchaseCost*used})});p.stock-=q;const selling=+oSelling.value||0,other=+oOther.value||0,productCost=(p.purchaseCost||0)*q,packagingCost=frozenPackaging.reduce((s,x)=>s+x.total,0),channelFee=+oChannelFee.value||0,courierCost=+oCourier.value||0,revenue=selling*q,totalExpense=productCost+packagingCost+channelFee+courierCost+other;db.orders.unshift({id:Date.now().toString(),orderId,date:oDate.value,channel,action:'received',status:'active',productId:p.id,productName:p.name,sku:p.sku||'',qty:q,sellingPrice:selling,revenue,productCost,packagingCost,channelFee,courierCost,amazonCost:channel==='Amazon'?channelFee+courierCost:0,otherExpense:other,totalExpense,profit:revenue-totalExpense,packaging:frozenPackaging,returnedResellableQty:0,returnedNonResellableQty:0,balanceStock:p.stock});closeModal('orderModal');persist()}
+function orderReturnedQty(o){return (+o.returnedResellableQty||0)+(+o.returnedNonResellableQty||0)}
+function orderStatus(o){
+ if(o.status==='cancelled')return 'cancelled';
+ const r=orderReturnedQty(o);
+ if(r>0 && r>=o.qty)return 'returned';
+ if(r>0)return 'partial_return';
+ return 'active';
+}
+function orderFinancials(o){const status=orderStatus(o);if(status==='cancelled')return {netQty:0,revenue:0,productCost:0,packagingCost:0,channelFee:0,courierCost:0,otherExpense:0,totalExpense:0,profit:0};const rr=+o.returnedResellableQty||0,rn=+o.returnedNonResellableQty||0;const netQty=Math.max(0,(+o.qty||0)-rr-rn),unitProduct=o.qty?((+o.productCost||0)/o.qty):0,revenue=netQty*(+o.sellingPrice||0);const productCost=Math.max(0,(+o.qty||0)-rr)*unitProduct,packagingCost=+o.packagingCost||0,channelFee=o.channelFee!=null?+o.channelFee:(+o.amazonCost||0),courierCost=+o.courierCost||0,otherExpense=+o.otherExpense||0,totalExpense=productCost+packagingCost+channelFee+courierCost+otherExpense;return {netQty,revenue,productCost,packagingCost,channelFee,courierCost,otherExpense,totalExpense,profit:revenue-totalExpense}}
+function eligibleOrders(){return db.orders.filter(o=>orderStatus(o)!=='cancelled' && orderStatus(o)!=='returned')}
+function openManageOrderModal(orderId=null){
+ const list=eligibleOrders();
+ if(!list.length)return alert('There are no active orders available to update.');
+ mOrder.innerHTML=list.map(o=>`<option value="${o.id}">${esc(o.orderId)} — ${esc(o.productName)} — Qty ${o.qty}</option>`).join('');
+ if(orderId && list.some(o=>o.id===orderId))mOrder.value=orderId;
+ mAction.value='return';mReturnQty.value=1;mResellable.value='yes';
+ refreshManageOrder();manageOrderModal.classList.add('show');
+}
+function refreshManageOrder(){
+ const o=db.orders.find(x=>x.id===mOrder.value);if(!o){manageOrderPreview.innerHTML='<div class="empty">Select an order.</div>';return}
+ const returned=orderReturnedQty(o),remaining=Math.max(0,o.qty-returned),cancelMode=mAction.value==='cancel';
+ mReturnQtyField.style.display=cancelMode?'none':'flex';mResellableField.style.display=cancelMode?'none':'flex';
+ mReturnQty.max=remaining;if(+mReturnQty.value>remaining)mReturnQty.value=remaining||1;
+ const f=orderFinancials(o);
+ manageOrderPreview.innerHTML=`<div class="sum">
+ <div class="sumrow"><span>Order ID</span><strong>${esc(o.orderId)}</strong></div>
+ <div class="sumrow"><span>Product</span><strong>${esc(o.productName)}</strong></div>
+ <div class="sumrow"><span>Original Qty</span><strong>${o.qty}</strong></div>
+ <div class="sumrow"><span>Already Returned</span><strong>${returned}</strong></div>
+ <div class="sumrow"><span>Remaining Active Qty</span><strong>${remaining}</strong></div>
+ <div class="sumrow"><span>Current Status</span><strong>${orderStatus(o).replace('_',' ')}</strong></div>
+ <div class="sumrow total"><span>${cancelMode?'Cancellation Effect':'Current Net Profit'}</span><strong>${cancelMode?'Restore original product + packaging stock':money(f.profit)}</strong></div>
+ </div>${cancelMode&&returned>0?'<div class="alert" style="margin-top:10px">An order with a recorded return cannot be cancelled as a whole. Use return adjustments instead.</div>':''}`;
+}
+function confirmOrderUpdate(){
+ const o=db.orders.find(x=>x.id===mOrder.value);if(!o)return;
+ const p=itemById(o.productId);if(!p)return alert('The product linked to this order no longer exists.');
+ const returned=orderReturnedQty(o),remaining=Math.max(0,o.qty-returned);
+ if(mAction.value==='cancel'){
+   if(returned>0)return alert('This order already has a return recorded and cannot be fully cancelled.');
+   if(orderStatus(o)==='cancelled')return alert('This order is already cancelled.');
+   p.stock=(p.stock||0)+o.qty;
+   (o.packaging||[]).forEach(r=>{const m=itemById(r.itemId);if(m)m.stock=(m.stock||0)+(+r.qty||0)});
+   o.status='cancelled';o.cancelledDate=new Date().toISOString().slice(0,10);o.balanceStock=p.stock;
+ }else{
+   const rq=Math.max(1,+mReturnQty.value||1);if(rq>remaining)return alert('Return quantity cannot exceed the remaining active quantity.');
+   const resellable=mResellable.value==='yes';
+   if(resellable){p.stock=(p.stock||0)+rq;o.returnedResellableQty=(+o.returnedResellableQty||0)+rq}
+   else{o.returnedNonResellableQty=(+o.returnedNonResellableQty||0)+rq}
+   o.status=orderReturnedQty(o)>=o.qty?'returned':'partial_return';o.lastReturnDate=new Date().toISOString().slice(0,10);o.balanceStock=p.stock;
+ }
+ closeModal('manageOrderModal');persist();
+}
+function renderOrders(){ordersTable.innerHTML=db.orders.length?`<table><tr><th>Order ID</th><th>Date</th><th>Channel</th><th>Status</th><th>Product</th><th>Original Qty</th><th>Net Qty</th><th>Selling Price</th><th>Product Cost</th><th>Packaging</th><th>Channel Fee</th><th>Courier</th><th>Other</th><th>Net Expense</th><th>Net Profit</th><th></th></tr>${db.orders.map(o=>{const f=orderFinancials(o),st=orderStatus(o),ch=o.channel||'Amazon';return `<tr><td>${esc(o.orderId)}</td><td>${esc(o.date)}</td><td>${ch==='Amazon'?'<span class="badge amazon">Amazon</span>':'<span class="badge sidech">'+esc(ch)+'</span>'}</td><td>${st==='active'?'<span class="badge ok">Active</span>':st==='partial_return'?'<span class="badge warnb">Partial Return</span>':st==='returned'?'<span class="badge warnb">Returned</span>':'<span class="badge bad">Cancelled</span>'}</td><td>${esc(o.productName)}</td><td>${o.qty}</td><td>${f.netQty}</td><td>${money(o.sellingPrice)}</td><td>${money(f.productCost)}</td><td>${money(f.packagingCost)}</td><td>${money(f.channelFee)}</td><td>${money(f.courierCost)}</td><td>${money(f.otherExpense)}</td><td>${money(f.totalExpense)}</td><td>${money(f.profit)}</td><td>${(st==='active'||st==='partial_return')?`<button class="btn warn" onclick="openManageOrderModal('${o.id}')">Update</button>`:'-'}</td></tr>`}).join('')}</table>`:'<div class="empty">No orders recorded yet.</div>'}
+
+function productSales(p){return db.orders.filter(o=>o.productId===p.id && orderStatus(o)!=='cancelled')}
+function renderDashboard(){const invVal=db.items.reduce((sum,x)=>sum+currentValue(x),0),live=db.orders.filter(o=>orderStatus(o)!=='cancelled'),amazonOrders=live.filter(o=>(o.channel||'Amazon')==='Amazon'),otherOrders=live.filter(o=>(o.channel||'Amazon')!=='Amazon'),af=amazonOrders.map(orderFinancials),of=otherOrders.map(orderFinancials),all=[...af,...of],amazonSales=af.reduce((s,f)=>s+f.revenue,0),amazonProfit=af.reduce((s,f)=>s+f.profit,0),otherSales=of.reduce((s,f)=>s+f.revenue,0),sales=all.reduce((s,f)=>s+f.revenue,0),profit=all.reduce((s,f)=>s+f.profit,0),amazonUnits=af.reduce((s,f)=>s+f.netQty,0),otherUnits=of.reduce((s,f)=>s+f.netQty,0);kInventoryValue.textContent=money(invVal);kAmazonSales.textContent=money(amazonSales);kAmazonProfit.textContent=money(amazonProfit);kOtherSales.textContent=money(otherSales);kSales.textContent=money(sales);kProfit.textContent=money(profit);kAmazonUnits.textContent=amazonUnits;kOtherUnits.textContent=otherUnits;kOrders.textContent=amazonUnits+otherUnits;dashboardProducts.innerHTML=products().length?`<table><tr><th>Product</th><th>Opening Qty</th><th>Net Sold</th><th>Balance</th><th>Current Investment</th><th>Sale Ready</th><th>Amazon Price</th><th>Amazon Expected Profit / Unit</th><th>Potential Amazon Profit</th></tr>${products().map(p=>{const os=productSales(p),netSold=os.reduce((sum,o)=>sum+orderFinancials(o).netQty,0);return `<tr><td><div class="pcell">${thumb(p)}<strong>${esc(p.name)}</strong></div></td><td>${p.openingQty}</td><td>${netSold}</td><td>${p.stock}</td><td>${money(currentValue(p))}</td><td>${saleReadyQty(p)}</td><td>${money(p.sellingPrice)}</td><td>${money(expectedProfitUnit(p))}</td><td>${money(saleReadyQty(p)*expectedProfitUnit(p))}</td></tr>`}).join('')}</table>`:'<div class="empty">No products yet.</div>'}
+function renderReports(){
+const prodValue=products().reduce((sum,p)=>sum+currentValue(p),0),packValue=packagingItems().reduce((sum,p)=>sum+currentValue(p),0),live=db.orders.filter(o=>orderStatus(o)!=='cancelled'),fs=live.map(orderFinancials),activeCount=fs.filter(f=>f.netQty>0).length,avg=activeCount?fs.reduce((sum,f)=>sum+f.profit,0)/activeCount:0;
+rProductValue.textContent=money(prodValue);rPackagingValue.textContent=money(packValue);rAvgProfit.textContent=money(avg);
+productReport.innerHTML=products().length?`<table><tr><th>Product</th><th>Net Units</th><th>Revenue</th><th>Profit</th></tr>${products().map(p=>{const os=productSales(p),pf=os.map(orderFinancials);return `<tr><td>${esc(p.name)}</td><td>${pf.reduce((sum,f)=>sum+f.netQty,0)}</td><td>${money(pf.reduce((sum,f)=>sum+f.revenue,0))}</td><td>${money(pf.reduce((sum,f)=>sum+f.profit,0))}</td></tr>`}).join('')}</table>`:'<div class="empty">No activity yet.</div>';
+const channels=['Amazon','Offline / Direct','WhatsApp / Instagram','Website','Other Marketplace'];channelReport.innerHTML=`<table><tr><th>Channel</th><th>Net Units</th><th>Revenue</th><th>Profit</th><th>Orders</th></tr>${channels.map(ch=>{const os=live.filter(o=>(o.channel||'Amazon')===ch),cf=os.map(orderFinancials);return `<tr><td>${ch==='Amazon'?'<span class="badge amazon">Amazon</span>':'<span class="badge sidech">'+esc(ch)+'</span>'}</td><td>${cf.reduce((s,f)=>s+f.netQty,0)}</td><td>${money(cf.reduce((s,f)=>s+f.revenue,0))}</td><td>${money(cf.reduce((s,f)=>s+f.profit,0))}</td><td>${os.length}</td></tr>`}).join('')}</table>`;const alerts=db.items.filter(x=>(x.stock||0)<=(x.reorder||0));stockAlerts.innerHTML=alerts.length?alerts.map(x=>`<div class="alert" style="margin-bottom:8px"><strong>${esc(x.name)}</strong><br>Balance ${x.stock} • Reorder level ${x.reorder}</div>`).join(''):'<div class="empty">No low-stock alerts.</div>';
+}
+function saveSettings(){db.settings.fulfilment=+sFulfil.value||0;db.settings.marketplace=+sMarketplace.value||0;db.settings.transport=+sTransport.value||0;db.settings.offlineCourier=+sOfflineCourier.value||0;db.settings.whatsappFee=+sWhatsappFee.value||0;db.settings.whatsappCourier=+sWhatsappCourier.value||0;db.settings.websiteFee=+sWebsiteFee.value||0;db.settings.websiteCourier=+sWebsiteCourier.value||0;db.settings.otherMarketFee=+sOtherMarketFee.value||0;db.settings.otherMarketCourier=+sOtherMarketCourier.value||0;persist()}
+function resetAll(){if(confirm('Delete all test data?')){localStorage.removeItem(KEY);db={items:[],purchases:[],orders:[],settings:{fulfilment:0,marketplace:0,transport:0,offlineCourier:0,whatsappFee:0,whatsappCourier:0,websiteFee:0,websiteCourier:0,otherMarketFee:0,otherMarketCourier:0}};renderAll()}}
+function renderAll(){
+ if(!db.purchases)db.purchases=[];
+ db.items.forEach(x=>{
+   if(x.openingCost==null)x.openingCost=+x.purchaseCost||0;
+   if(!x.openingDate)x.openingDate=new Date().toISOString().slice(0,10);
+   if((+x.openingQty||0)>0 && !db.purchases.some(p=>p.itemId===x.id&&p.type==='opening')){
+     db.purchases.push({id:'OPEN-'+x.id,type:'opening',itemId:x.id,itemName:x.name,date:x.openingDate,qty:x.openingQty,unitCost:x.openingCost,total:x.openingQty*x.openingCost,otherCost:0,vendor:'Opening Stock',reference:'Migrated initial entry'});
+   }
+   if(x.purchaseCost==null)x.purchaseCost=+x.openingCost||0;
+ });
+ db.orders.forEach(o=>{if(!o.status)o.status=o.action==='cancelled'?'cancelled':o.action==='returned'?'returned':'active';if(o.returnedResellableQty==null)o.returnedResellableQty=0;if(o.returnedNonResellableQty==null)o.returnedNonResellableQty=0;if(!o.channel)o.channel='Amazon';if(o.channelFee==null){o.channelFee=+o.amazonCost||0;o.courierCost=+o.courierCost||0}});if(db.settings.marketplace==null)db.settings.marketplace=0;if(db.settings.offlineCourier==null)db.settings.offlineCourier=0;if(db.settings.whatsappFee==null)db.settings.whatsappFee=0;if(db.settings.whatsappCourier==null)db.settings.whatsappCourier=0;if(db.settings.websiteFee==null)db.settings.websiteFee=0;if(db.settings.websiteCourier==null)db.settings.websiteCourier=0;if(db.settings.otherMarketFee==null)db.settings.otherMarketFee=0;if(db.settings.otherMarketCourier==null)db.settings.otherMarketCourier=0;
+ renderInventory();renderPurchases();refreshSetupProducts();renderSetup();renderOrders();renderDashboard();renderReports();
+ sFulfil.value=db.settings.fulfilment||0;sMarketplace.value=db.settings.marketplace||0;sTransport.value=db.settings.transport||0;sOfflineCourier.value=db.settings.offlineCourier||0;sWhatsappFee.value=db.settings.whatsappFee||0;sWhatsappCourier.value=db.settings.whatsappCourier||0;sWebsiteFee.value=db.settings.websiteFee||0;sWebsiteCourier.value=db.settings.websiteCourier||0;sOtherMarketFee.value=db.settings.otherMarketFee||0;sOtherMarketCourier.value=db.settings.otherMarketCourier||0;
+ localStorage.setItem(KEY,JSON.stringify(db));
+}
+renderAll();
+</script>
+</body>
+</html>

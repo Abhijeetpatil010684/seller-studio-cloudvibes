@@ -1,0 +1,8 @@
+{
+  "name": "seller-studio-v7-5-cloudvibes",
+  "private": true,
+  "version": "7.5.0",
+  "scripts": {
+    "build": "rm -rf dist && mkdir -p dist && cp index.html dist/index.html && cp -r assets dist/assets && cp _headers dist/_headers && cp _redirects dist/_redirects"
+  }
+}
