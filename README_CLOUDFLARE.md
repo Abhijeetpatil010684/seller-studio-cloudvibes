@@ -1,47 +1,30 @@
-# Seller Studio V7.5 — CloudVibes / Cloudflare Pages
+# Seller Studio V7.6 — CloudVibes Teal UI
 
-This is the SAME Seller Studio application based on V7.4 Compact.
+Same Seller Studio workflow, now with the CloudVibes peacock-teal identity and improved mobile responsiveness.
 
-No UI/workflow redesign was introduced.
+Changes:
+- Deep peacock-teal navigation
+- Cool-grey workspace and white operational cards/tables
+- Teal primary actions
+- Sage success, coral warning/error, restrained gold secondary accents
+- Product thumbnails kept on white for stronger jewellery contrast
+- Mobile hamburger / slide-out navigation
+- Two-column KPI layout on smaller screens where practical
+- Responsive top actions and mobile bottom-sheet style modals
+- Operational tables remain horizontally scrollable so no columns/data are removed
 
-Retained:
-- Dashboard
-- Master Inventory
-- Purchase Register
-- Product Setup
-- Order / Sales Register
-- Reports
-- Settings
-- Amazon-first multi-channel sales
-- Update Existing Order for return/cancellation
-- moving weighted-average purchase cost
-- packaging/material consumption
-- white/off-white compact UI
-
-Added:
-- 23 CloudVibes Amazon listings
-- hero images
-- CloudVibes SKU
-- visible ASIN
-- Amazon selling price
-- MRP
-- Refresh CloudVibes Products button
-
-CloudVibes products start with stock=0 and purchase cost=0.
-Enter actual stock purchases through Purchase Register.
-
-## Cloudflare Pages with GitHub
-
-Push this folder to the Git repository.
+Data safety:
+The localStorage key remains `sellerStudioV75CloudVibes`.
+This is intentional so replacing the deployed UI on the same browser/domain does not reset the current locally stored inventory/orders.
 
 Cloudflare Pages:
+- Keep the existing Seller Studio GitHub repository
+- Keep the existing Seller Studio Cloudflare Pages project
 - Production branch: main
+- Framework preset: None
 - Build command: npm run build
 - Build output directory: dist
+- Root directory: blank
+- No environment variables for this version
 
-No environment variables are required for this static version.
-
-Important:
-This version intentionally preserves the existing browser/localStorage data model.
-Hosting it on Cloudflare makes the app accessible by URL, but data is still per browser/device.
-A remote database can be connected later WITHOUT redesigning the interface.
+Do not create another Worker or another Seller Studio Pages project.

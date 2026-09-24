@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Seller Studio V7.5 - CloudVibes Amazon First</title>
+<title>Seller Studio V7.6 - CloudVibes Teal</title>
 <style>
 :root{--bg:#f7f5f0;--panel:#fff;--panel2:#fbfaf7;--text:#4d5751;--muted:#7c837f;--line:#e6e1d8;--sage:#eaf3ed;--sageText:#55705e;--blue:#edf4f8;--blueText:#5f7e99;--beige:#f7f0e5;--beigeText:#826d49;--coral:#faefed;--coralText:#9d6259;--shadow:0 8px 24px rgba(90,82,70,.06)}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -83,6 +83,98 @@ th,td{padding:7px 7px}
 .kpi{min-height:0}
 @media(max-width:1050px){.app{grid-template-columns:1fr}.main{padding:12px}.side{padding:10px}}
 </style>
+
+<style id="cloudvibes-teal-v76">
+:root{
+  --cv-teal:#0f5c5e;--cv-deep:#234e52;--cv-soft:#eaf3f2;--cv-bg:#f4f7f7;
+  --cv-white:#ffffff;--cv-text:#35484a;--cv-muted:#718184;--cv-line:#dbe5e5;
+  --cv-sage:#e8f1ed;--cv-sage-text:#527267;--cv-coral:#f8e8e5;
+  --cv-coral-text:#a3544b;--cv-gold:#c4a163;--cv-gold-soft:#f7f1e5;
+  --cv-blue-soft:#e9f2f4;--cv-shadow:0 8px 24px rgba(27,75,78,.07);
+}
+body{background:var(--cv-bg);color:var(--cv-text)}
+.side{background:linear-gradient(180deg,var(--cv-deep),#17484b);border-right:0;box-shadow:6px 0 24px rgba(24,70,73,.10)}
+.brand{color:#fff}.brand span{color:#d8bd83}
+.nav button{color:#d7e5e5}
+.nav button.active,.nav button:hover{background:rgba(255,255,255,.13);color:#fff;box-shadow:none}
+.main{background:var(--cv-bg)}
+.top h1{color:var(--cv-deep)}
+.card{background:#fff;border-color:var(--cv-line);box-shadow:var(--cv-shadow)}
+.hero{background:linear-gradient(135deg,#fff,var(--cv-soft));border-color:var(--cv-line)}
+.hero h2,.title,.kpi .value{color:var(--cv-deep)}
+.hero p,.small,.kpi .label,.kpi .note,.field label{color:var(--cv-muted)}
+.btn{border-color:var(--cv-line);background:#fff;color:#496265}
+.btn:hover{border-color:#bfd2d2;background:#f7fbfb}
+.btn.primary{background:var(--cv-teal);border-color:var(--cv-teal);color:#fff}
+.btn.primary:hover{background:var(--cv-deep);border-color:var(--cv-deep)}
+.btn.blue{background:var(--cv-blue-soft);border-color:#d2e3e6;color:#3f7075}
+.btn.warn{background:var(--cv-gold-soft);border-color:#eadcbf;color:#80683d}
+.btn.danger{background:var(--cv-coral);border-color:#efd0cb;color:var(--cv-coral-text)}
+table{background:#fff}
+th{background:#eef5f5;color:#526b6e}
+th,td{border-bottom-color:var(--cv-line)}
+tr:hover td{background:#f6fafa}
+.thumb{object-fit:contain;background:#fff;border-color:var(--cv-line)}
+.input,select{border-color:var(--cv-line);color:var(--cv-text);background:#fff}
+.input:focus,select:focus{outline:2px solid rgba(15,92,94,.13);border-color:#80aeb0}
+.sum{background:#f7fafa;border-color:var(--cv-line)}
+.amazon{background:#e7f2f3;color:#356e72}
+.sidech{background:var(--cv-gold-soft);color:#80683d}
+.ok{background:var(--cv-sage);color:var(--cv-sage-text)}
+.warnb{background:var(--cv-gold-soft);color:#80683d}
+.bad{background:var(--cv-coral);color:var(--cv-coral-text)}
+.alert{background:var(--cv-gold-soft);color:#715d38;border-color:#eadcbf}
+.empty{background:#f8fbfb;border-color:#cfdddd;color:var(--cv-muted)}
+.modal{background:rgba(25,62,65,.28)}
+.modalbox{border-color:var(--cv-line);box-shadow:0 18px 55px rgba(20,60,63,.18)}
+
+.mobile-menu-btn{display:none;width:40px;height:40px;flex:0 0 40px;border:1px solid var(--cv-line);background:#fff;color:var(--cv-deep);border-radius:10px;font-size:20px;font-weight:800;cursor:pointer}
+.mobile-side-overlay{display:none}
+
+@media(max-width:1050px){
+  .app{display:block}
+  .side{position:fixed;z-index:80;top:0;left:0;bottom:0;width:260px;padding:14px 10px;transform:translateX(-105%);transition:transform .22s ease;overflow:auto}
+  .side.mobile-open{transform:translateX(0)}
+  .mobile-side-overlay{position:fixed;inset:0;z-index:75;background:rgba(23,56,58,.36)}
+  .mobile-side-overlay.show{display:block}
+  .mobile-menu-btn{display:inline-grid;place-items:center}
+  .nav{display:block}
+  .main{min-height:100vh;padding:12px}
+  .top{align-items:flex-start;justify-content:flex-start;flex-wrap:wrap;gap:8px}
+  .top h1{line-height:40px}
+  .actions{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .actions .btn{min-height:40px}
+  .five,.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .two,.form2,.form3,.reportgrid{grid-template-columns:1fr}
+  .table-scroll,#inventoryTable,#purchasesTable,#ordersTable,#dashboardProducts,#productReport,#channelReport{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:760px}
+}
+@media(max-width:640px){
+  .main{padding:10px}
+  .top{margin-bottom:10px}
+  .top h1{font-size:21px}
+  .actions{grid-template-columns:1fr 1fr}
+  .actions .btn:last-child{grid-column:1/-1}
+  .five,.four{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .kpi .value{font-size:22px}
+  .card{padding:10px}
+  .hero{padding:12px}
+  .hero h2{font-size:17px}
+  .modal{padding:0;align-items:flex-end}
+  .modalbox{width:100%;max-height:92vh;border-radius:16px 16px 0 0;border-left:0;border-right:0;border-bottom:0;padding:12px}
+  .btn{min-height:40px}
+  .row{gap:5px}
+}
+@media(max-width:430px){
+  .five,.four{grid-template-columns:1fr 1fr}
+  .kpi .label{font-size:11px}
+  .kpi .value{font-size:20px}
+  .kpi .note{font-size:10px}
+  .actions{grid-template-columns:1fr}
+  .actions .btn:last-child{grid-column:auto}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -98,8 +190,10 @@ th,td{padding:7px 7px}
 <button data-page="settings">Settings</button>
 </div>
 </aside>
+<div class="mobile-side-overlay" id="mobileSideOverlay" onclick="toggleMobileNav(false)"></div>
 <main class="main">
 <div class="top">
+<button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Open navigation" onclick="toggleMobileNav()">☰</button>
 <h1 id="pageTitle">Dashboard</h1>
 <div class="actions"><button class="btn primary" onclick="openItemModal()">+ Add Inventory Item</button><button class="btn warn" onclick="openPurchaseModal()">+ Record Purchase</button><button class="btn blue" onclick="openOrderModal('received')">+ Order Received</button></div>
 </div>
@@ -548,5 +642,22 @@ function renderAll(){
 }
 renderAll();
 </script>
+
+<script id="cloudvibes-mobile-nav-v76">
+function toggleMobileNav(force){
+  const side=document.querySelector('.side');
+  const overlay=document.getElementById('mobileSideOverlay');
+  if(!side||!overlay)return;
+  const open=typeof force==='boolean'?force:!side.classList.contains('mobile-open');
+  side.classList.toggle('mobile-open',open);
+  overlay.classList.toggle('show',open);
+  document.body.style.overflow=open?'hidden':'';
+}
+document.querySelectorAll('.nav button').forEach(function(btn){
+  btn.addEventListener('click',function(){if(window.innerWidth<=1050)toggleMobileNav(false);});
+});
+window.addEventListener('resize',function(){if(window.innerWidth>1050)toggleMobileNav(false);});
+</script>
+
 </body>
 </html>
