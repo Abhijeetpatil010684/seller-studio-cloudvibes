@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Seller Studio V7.6 - CloudVibes Teal</title>
+<title>Seller Studio V8 - Cloud Database</title>
 <style>
 :root{--bg:#f7f5f0;--panel:#fff;--panel2:#fbfaf7;--text:#4d5751;--muted:#7c837f;--line:#e6e1d8;--sage:#eaf3ed;--sageText:#55705e;--blue:#edf4f8;--blueText:#5f7e99;--beige:#f7f0e5;--beigeText:#826d49;--coral:#faefed;--coralText:#9d6259;--shadow:0 8px 24px rgba(90,82,70,.06)}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -175,6 +175,38 @@ tr:hover td{background:#f6fafa}
 }
 </style>
 
+
+<style id="cloudvibes-imagefit-v761">
+.thumb{
+  width:60px !important;
+  height:60px !important;
+  padding:0 !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  background:#fff !important;
+  border:1px solid var(--cv-line) !important;
+  border-radius:10px !important;
+}
+.pcell{gap:9px !important;align-items:center !important}
+@media(max-width:640px){
+  .thumb{width:54px !important;height:54px !important}
+}
+</style>
+
+
+<style id="cloudvibes-v8-category-db">
+.category-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:10px 0}
+.cat-card{border:1px solid var(--cv-line);background:#fff;border-radius:12px;padding:10px;cursor:pointer;text-align:left;transition:.15s ease}
+.cat-card:hover,.cat-card.active{border-color:#7fb0b2;background:var(--cv-soft);transform:translateY(-1px)}
+.cat-card strong{display:block;color:var(--cv-deep);font-size:12px;line-height:1.25}.cat-card span{font-size:11px;color:var(--cv-muted)}
+.inventory-filters{display:grid;grid-template-columns:1.15fr 1fr 1fr 1.4fr auto;gap:7px;margin:10px 0}
+.catline{font-weight:800;color:var(--cv-deep)}.subline{font-size:11px;color:var(--cv-muted);margin-top:2px}.collection-tag{display:inline-block;margin-top:4px;padding:3px 7px;border-radius:999px;background:#edf6f5;color:#487477;font-size:10px;font-weight:750}
+.db-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.db-dot{width:9px;height:9px;border-radius:50%;background:#b7c0c1}.db-dot.ok{background:#5d917e}.db-dot.bad{background:#c96f63}.db-dot.warn{background:#c4a163}
+.db-box{background:#f7fbfb;border:1px solid var(--cv-line);border-radius:12px;padding:11px}.db-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+@media(max-width:1050px){.category-summary{grid-template-columns:repeat(3,1fr)}.inventory-filters{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.category-summary{grid-template-columns:repeat(2,1fr)}.inventory-filters{grid-template-columns:1fr}.cat-card{padding:9px}}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -217,7 +249,17 @@ tr:hover td{background:#f6fafa}
 </section>
 
 <section class="page" id="inventory">
-<div class="card"><div class="row" style="justify-content:space-between"><div><div class="title">Master Inventory</div><div class="small">Products and supporting materials live in one inventory register.</div></div><div class="row"><button class="btn primary" onclick="openItemModal()">+ Add Item</button><button class="btn warn" onclick="openPurchaseModal()">+ Record Purchase</button><button class="btn blue" onclick="importCloudVibesProducts()">Refresh CloudVibes Products</button></div></div><div class="table-scroll" id="inventoryTable" style="margin-top:12px"></div></div>
+<div class="card">
+<div class="row" style="justify-content:space-between"><div><div class="title">Master Inventory</div><div class="small">Organised as Master Category → Subcategory → Collection. Packaging/materials remain in the same operational register.</div></div><div class="row"><button class="btn primary" onclick="openItemModal()">+ Add Item</button><button class="btn warn" onclick="openPurchaseModal()">+ Record Purchase</button><button class="btn blue" onclick="importCloudVibesProducts()">Refresh CloudVibes Products</button></div></div>
+<div class="category-summary" id="categorySummary"></div>
+<div class="inventory-filters">
+<select id="inventoryMasterFilter" onchange="inventoryFilterChanged()"><option value="All">All Master Categories</option></select>
+<select id="inventorySubFilter" onchange="inventoryFilterChanged()"><option value="All">All Subcategories</option></select>
+<select id="inventoryCollectionFilter" onchange="inventoryFilterChanged()"><option value="All">All Collections</option></select>
+<input id="inventorySearch" class="input" placeholder="Search product, SKU or ASIN" oninput="renderInventory()">
+<button class="btn" onclick="clearInventoryFilters()">Clear</button>
+</div>
+<div class="table-scroll" id="inventoryTable"></div></div>
 </section>
 
 
@@ -273,7 +315,11 @@ tr:hover td{background:#f6fafa}
 <div class="field"><label>Other Marketplace — Courier per Order</label><input id="sOtherMarketCourier" class="input" type="number" step="0.01"></div>
 </div></div></div>
 <div class="row" style="margin-top:15px"><button class="btn primary" onclick="saveSettings()">Save Channel Settings</button></div>
-<div class="card" style="margin-top:15px"><div class="title">Testing Controls</div><div class="alert">All test data is stored only in this browser.</div><button class="btn danger" style="margin-top:12px" onclick="resetAll()">Delete All Test Data</button></div>
+<div class="card" style="margin-top:15px">
+<div class="row" style="justify-content:space-between"><div><div class="title">Cloud Database — Cloudflare D1</div><div class="small">When enabled, every Seller Studio save continues locally and is also synchronized to the central D1 database.</div></div><div class="db-status"><span class="db-dot" id="dbStatusDot"></span><strong id="dbStatusText">Not checked</strong></div></div>
+<div class="db-box" style="margin-top:10px"><div class="small" id="dbStatusDetail">Deploy the included Pages Functions, create a D1 database, run schema.sql, and bind it as <strong>DB</strong>.</div><div class="db-actions"><button class="btn" onclick="testDatabase()">Test Database</button><button class="btn primary" onclick="enableCloudSync()">Enable & Sync Current Data</button><button class="btn blue" onclick="loadCloudData()">Load Cloud Data</button><button class="btn warn" onclick="disableCloudSync()">Disable Cloud Sync</button></div></div>
+</div>
+<div class="card" style="margin-top:15px"><div class="title">Local Browser Safety Copy</div><div class="alert">The browser copy is retained as a safety cache. When cloud sync is enabled, Seller Studio also updates D1 after each save.</div><button class="btn danger" style="margin-top:12px" onclick="resetAll()">Delete All Local Test Data</button></div>
 </section>
 
 </main>
@@ -284,7 +330,10 @@ tr:hover td{background:#f6fafa}
 <div class="form3">
 <div class="field"><label>SKU</label><input id="iSku" class="input"></div>
 <div class="field"><label>Item / Product Name *</label><input id="iName" class="input"></div>
-<div class="field"><label>Category *</label><select id="iCategory"><option>Jewellery</option><option>Packaging</option><option>Paper / Insert</option><option>Other</option></select></div>
+<div class="field"><label>Item Type *</label><select id="iCategory" onchange="handleItemTypeChange()"><option>Jewellery</option><option>Packaging</option><option>Paper / Insert</option><option>Other</option></select></div>
+<div class="field"><label>Master Category</label><select id="iMasterCategory"><option value="Necklaces & Sets">Necklaces & Sets</option><option value="Mangalsutra">Mangalsutra</option><option value="Bangles & Rings">Bangles & Rings</option><option value="Nath & Accessories">Nath & Accessories</option><option value="Festive & Decor">Festive & Decor</option><option value="Materials & Packaging">Materials & Packaging</option></select></div>
+<div class="field"><label>Subcategory</label><input id="iSubCategory" class="input" placeholder="e.g. Double Line Mangalsutra"></div>
+<div class="field"><label>Collection</label><input id="iCollection" class="input" placeholder="e.g. Maharashtrian Traditional"></div>
 <div class="field"><label>Opening Quantity *</label><input id="iQty" class="input" type="number" min="0"></div>
 <div class="field"><label>Opening Stock Date</label><input id="iDate" class="input" type="date"></div>
 <div class="field"><label>Opening Cost / Unit *</label><input id="iCost" class="input" type="number" min="0" step="0.01"></div>
@@ -345,7 +394,7 @@ tr:hover td{background:#f6fafa}
 const KEY='sellerStudioV75CloudVibes';
 let db=JSON.parse(localStorage.getItem(KEY)||'null')||{items:[],purchases:[],orders:[],settings:{fulfilment:0,marketplace:0,transport:0,offlineCourier:0,whatsappFee:0,whatsappCourier:0,websiteFee:0,websiteCourier:0,otherMarketFee:0,otherMarketCourier:0}};
 if(!db.purchases)db.purchases=[];
-const CLOUDVIBES_PRODUCTS=[{"id":"CLOUDVIBES-001","sku":"CV-001","asin":"","name":"Handcrafted Zendu Flowers Haar Marigold Garland 45 cm","category":"Jewellery","subCategory":"Garland","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":498.0,"mrp":599.0,"reorder":5,"image":"assets/cloudvibes/01_Handcrafted_Zendu_Flowers_Haar_Marigold_Garland_45_cm.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-002","sku":"CV-002","asin":"","name":"Traditional Maharashtrian Pearl Bangles","category":"Jewellery","subCategory":"Bangles","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":499.0,"mrp":790.0,"reorder":5,"image":"assets/cloudvibes/02_Traditional_Maharashtrian_Pearl_Bangles.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-003","sku":"CV-003","asin":"","name":"Handmade Chenille Daisy Flower Bag Charm and Keychain- PACK of 5","category":"Jewellery","subCategory":"Accessories","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":289.0,"mrp":299.0,"reorder":5,"image":"assets/cloudvibes/03_Handmade_Chenille_Daisy_Flower_Bag_Charm_and_Keychain_PACK_of_5.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-004","sku":"CV-004","asin":"B0H9NXL9FN","name":"Traditional Floral Pearl & Green Stone Double Line Mangalsutra","category":"Jewellery","subCategory":"Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":449.0,"mrp":599.0,"reorder":5,"image":"assets/cloudvibes/04_Traditional_Floral_Pearl_Green_Stone_Double_Line_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-005","sku":"CV-005","asin":"","name":"Traditional Maharashtrian Necklace, Nathani with pair of Earrings Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":749.0,"mrp":1999.0,"reorder":5,"image":"assets/cloudvibes/05_Traditional_Maharashtrian_Necklace_Nathani_with_pair_of_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-006","sku":"CV-006","asin":"","name":"Traditional Maharashtrian Floral Pearl Bangle","category":"Jewellery","subCategory":"Bangles","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/06_Traditional_Maharashtrian_Floral_Pearl_Bangle.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-007","sku":"CV-007","asin":"B0HCM5T594","name":"Traditional Maharashtrian Necklace and Earrings Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/07_Traditional_Maharashtrian_Necklace_and_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-008","sku":"CV-008","asin":"B0H9NYQXNB","name":"Traditional Double Line Black Bead Pearl Floral Mangalsutra","category":"Jewellery","subCategory":"Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":399.0,"mrp":599.0,"reorder":5,"image":"assets/cloudvibes/08_Traditional_Double_Line_Black_Bead_Pearl_Floral_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-009","sku":"CV-009","asin":"B0H9MRK6YK","name":"Traditional Double Line Black Bead Peacock Mangalsutra","category":"Jewellery","subCategory":"Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":449.0,"mrp":699.0,"reorder":5,"image":"assets/cloudvibes/09_Traditional_Double_Line_Black_Bead_Peacock_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-010","sku":"CV-010","asin":"","name":"Traditional Maharashtrian Angathi Set for Women","category":"Jewellery","subCategory":"Ring Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":219.0,"mrp":329.0,"reorder":5,"image":"assets/cloudvibes/10_Traditional_Maharashtrian_Angathi_Set_for_Women.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-011","sku":"CV-011","asin":"B0H9JP6LN5","name":"Pearl Necklace with Ruby Red Floral Pendant","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":429.0,"reorder":5,"image":"assets/cloudvibes/11_Pearl_Necklace_with_Ruby_Red_Floral_Pendant.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-012","sku":"CV-012","asin":"B0H9JP634N","name":"Traditional Maharashtrian Moti Floral Necklace Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/12_Traditional_Maharashtrian_Moti_Floral_Necklace_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-013","sku":"CV-013","asin":"B0H9JP2QHS","name":"Chandrakor Pendant Necklace with Green Crystal & Pearls","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/13_Chandrakor_Pendant_Necklace_with_Green_Crystal_Pearls.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-014","sku":"CV-014","asin":"","name":"Emerald Green Teardrop Necklace Set with Matching Earrings","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":429.0,"mrp":499.0,"reorder":5,"image":"assets/cloudvibes/14_Emerald_Green_Teardrop_Necklace_Set_with_Matching_Earrings.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-015","sku":"CV-015","asin":"B0H9HWTFVX","name":"Pearl Necklace with Ruby Teardrop Pendant Gold-Plated Chain","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/15_Pearl_Necklace_with_Ruby_Teardrop_Pendant_Gold_Plated_Chain.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-016","sku":"CV-016","asin":"B0H9HTJRXY","name":"Royal Chandrika Necklace","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/16_Royal_Chandrika_Necklace.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-017","sku":"CV-017","asin":"B0H9HT5C2R","name":"Ruby Bloom Floral Mangalsutra with Black Beads","category":"Jewellery","subCategory":"Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/17_Ruby_Bloom_Floral_Mangalsutra_with_Black_Beads.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-018","sku":"CV-018","asin":"B0H9HFXC99","name":"Pearl Flower Pendant Necklace with Green Stone Gold-Toned","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":419.0,"reorder":5,"image":"assets/cloudvibes/18_Pearl_Flower_Pendant_Necklace_with_Green_Stone_Gold_Toned.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-019","sku":"CV-019","asin":"","name":"Lotus Pearl Kundan Choker Necklace and Earrings Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":399.0,"mrp":549.0,"reorder":5,"image":"assets/cloudvibes/19_Lotus_Pearl_Kundan_Choker_Necklace_and_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-020","sku":"CV-020","asin":"B0H9G3GKVG","name":"Single Line Fancy Mangalsutra","category":"Jewellery","subCategory":"Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/20_Single_Line_Fancy_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-021","sku":"CV-021","asin":"","name":"Traditional Maharashtrian Necklace and Earrings Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":899.0,"reorder":5,"image":"assets/cloudvibes/21_Traditional_Maharashtrian_Necklace_and_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-022","sku":"CV-022","asin":"","name":"Traditional Nathani Nose Pin Set","category":"Jewellery","subCategory":"Nose Pin Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":875.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/22_Traditional_Nathani_Nose_Pin_Set.jpg","recipe":[],"source":"CloudVibes Amazon"},{"id":"CLOUDVIBES-023","sku":"CV-023","asin":"","name":"Traditional Maharashtrian Jewellery Set","category":"Jewellery","subCategory":"Jewellery Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":849.0,"mrp":1149.0,"reorder":5,"image":"assets/cloudvibes/23_Traditional_Maharashtrian_Jewellery_Set.jpg","recipe":[],"source":"CloudVibes Amazon"}];
+const CLOUDVIBES_PRODUCTS=[{"id":"CLOUDVIBES-001","sku":"CV-001","asin":"","name":"Handcrafted Zendu Flowers Haar Marigold Garland 45 cm","category":"Jewellery","subCategory":"Marigold Garland","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":498.0,"mrp":599.0,"reorder":5,"image":"assets/cloudvibes/01_Handcrafted_Zendu_Flowers_Haar_Marigold_Garland_45_cm.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Festive & Decor","collection":"Festive Collection"},{"id":"CLOUDVIBES-002","sku":"CV-002","asin":"","name":"Traditional Maharashtrian Pearl Bangles","category":"Jewellery","subCategory":"Pearl Bangles","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":499.0,"mrp":790.0,"reorder":5,"image":"assets/cloudvibes/02_Traditional_Maharashtrian_Pearl_Bangles.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Bangles & Rings","collection":"Maharashtrian Traditional"},{"id":"CLOUDVIBES-003","sku":"CV-003","asin":"","name":"Handmade Chenille Daisy Flower Bag Charm and Keychain- PACK of 5","category":"Jewellery","subCategory":"Bag Charm & Keychain","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":289.0,"mrp":299.0,"reorder":5,"image":"assets/cloudvibes/03_Handmade_Chenille_Daisy_Flower_Bag_Charm_and_Keychain_PACK_of_5.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Nath & Accessories","collection":"Accessories Collection"},{"id":"CLOUDVIBES-004","sku":"CV-004","asin":"B0H9NXL9FN","name":"Traditional Floral Pearl & Green Stone Double Line Mangalsutra","category":"Jewellery","subCategory":"Double Line Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":449.0,"mrp":599.0,"reorder":5,"image":"assets/cloudvibes/04_Traditional_Floral_Pearl_Green_Stone_Double_Line_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Mangalsutra","collection":"Floral Collection"},{"id":"CLOUDVIBES-005","sku":"CV-005","asin":"","name":"Traditional Maharashtrian Necklace, Nathani with pair of Earrings Set","category":"Jewellery","subCategory":"Necklace & Nathani Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":749.0,"mrp":1999.0,"reorder":5,"image":"assets/cloudvibes/05_Traditional_Maharashtrian_Necklace_Nathani_with_pair_of_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Maharashtrian Traditional"},{"id":"CLOUDVIBES-006","sku":"CV-006","asin":"","name":"Traditional Maharashtrian Floral Pearl Bangle","category":"Jewellery","subCategory":"Floral Bangle","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/06_Traditional_Maharashtrian_Floral_Pearl_Bangle.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Bangles & Rings","collection":"Floral Collection"},{"id":"CLOUDVIBES-007","sku":"CV-007","asin":"B0HCM5T594","name":"Traditional Maharashtrian Necklace and Earrings Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/07_Traditional_Maharashtrian_Necklace_and_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Maharashtrian Traditional"},{"id":"CLOUDVIBES-008","sku":"CV-008","asin":"B0H9NYQXNB","name":"Traditional Double Line Black Bead Pearl Floral Mangalsutra","category":"Jewellery","subCategory":"Double Line Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":399.0,"mrp":599.0,"reorder":5,"image":"assets/cloudvibes/08_Traditional_Double_Line_Black_Bead_Pearl_Floral_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Mangalsutra","collection":"Floral Collection"},{"id":"CLOUDVIBES-009","sku":"CV-009","asin":"B0H9MRK6YK","name":"Traditional Double Line Black Bead Peacock Mangalsutra","category":"Jewellery","subCategory":"Double Line Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":449.0,"mrp":699.0,"reorder":5,"image":"assets/cloudvibes/09_Traditional_Double_Line_Black_Bead_Peacock_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Mangalsutra","collection":"Peacock Collection"},{"id":"CLOUDVIBES-010","sku":"CV-010","asin":"","name":"Traditional Maharashtrian Angathi Set for Women","category":"Jewellery","subCategory":"Angathi / Ring Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":219.0,"mrp":329.0,"reorder":5,"image":"assets/cloudvibes/10_Traditional_Maharashtrian_Angathi_Set_for_Women.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Bangles & Rings","collection":"Maharashtrian Traditional"},{"id":"CLOUDVIBES-011","sku":"CV-011","asin":"B0H9JP6LN5","name":"Pearl Necklace with Ruby Red Floral Pendant","category":"Jewellery","subCategory":"Pendant Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":429.0,"reorder":5,"image":"assets/cloudvibes/11_Pearl_Necklace_with_Ruby_Red_Floral_Pendant.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Pearl Collection"},{"id":"CLOUDVIBES-012","sku":"CV-012","asin":"B0H9JP634N","name":"Traditional Maharashtrian Moti Floral Necklace Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/12_Traditional_Maharashtrian_Moti_Floral_Necklace_Set.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Maharashtrian Traditional"},{"id":"CLOUDVIBES-013","sku":"CV-013","asin":"B0H9JP2QHS","name":"Chandrakor Pendant Necklace with Green Crystal & Pearls","category":"Jewellery","subCategory":"Pendant Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/13_Chandrakor_Pendant_Necklace_with_Green_Crystal_Pearls.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Pearl Collection"},{"id":"CLOUDVIBES-014","sku":"CV-014","asin":"","name":"Emerald Green Teardrop Necklace Set with Matching Earrings","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":429.0,"mrp":499.0,"reorder":5,"image":"assets/cloudvibes/14_Emerald_Green_Teardrop_Necklace_Set_with_Matching_Earrings.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Contemporary Collection"},{"id":"CLOUDVIBES-015","sku":"CV-015","asin":"B0H9HWTFVX","name":"Pearl Necklace with Ruby Teardrop Pendant Gold-Plated Chain","category":"Jewellery","subCategory":"Pendant Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/15_Pearl_Necklace_with_Ruby_Teardrop_Pendant_Gold_Plated_Chain.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Pearl Collection"},{"id":"CLOUDVIBES-016","sku":"CV-016","asin":"B0H9HTJRXY","name":"Royal Chandrika Necklace","category":"Jewellery","subCategory":"Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/16_Royal_Chandrika_Necklace.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Maharashtrian Traditional"},{"id":"CLOUDVIBES-017","sku":"CV-017","asin":"B0H9HT5C2R","name":"Ruby Bloom Floral Mangalsutra with Black Beads","category":"Jewellery","subCategory":"Floral Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/17_Ruby_Bloom_Floral_Mangalsutra_with_Black_Beads.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Mangalsutra","collection":"Floral Collection"},{"id":"CLOUDVIBES-018","sku":"CV-018","asin":"B0H9HFXC99","name":"Pearl Flower Pendant Necklace with Green Stone Gold-Toned","category":"Jewellery","subCategory":"Pendant Necklace","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":419.0,"reorder":5,"image":"assets/cloudvibes/18_Pearl_Flower_Pendant_Necklace_with_Green_Stone_Gold_Toned.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Pearl Collection"},{"id":"CLOUDVIBES-019","sku":"CV-019","asin":"","name":"Lotus Pearl Kundan Choker Necklace and Earrings Set","category":"Jewellery","subCategory":"Choker Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":399.0,"mrp":549.0,"reorder":5,"image":"assets/cloudvibes/19_Lotus_Pearl_Kundan_Choker_Necklace_and_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Wedding Collection"},{"id":"CLOUDVIBES-020","sku":"CV-020","asin":"B0H9G3GKVG","name":"Single Line Fancy Mangalsutra","category":"Jewellery","subCategory":"Single Line Mangalsutra","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":299.0,"mrp":399.0,"reorder":5,"image":"assets/cloudvibes/20_Single_Line_Fancy_Mangalsutra.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Mangalsutra","collection":"Everyday Jewellery"},{"id":"CLOUDVIBES-021","sku":"CV-021","asin":"","name":"Traditional Maharashtrian Necklace and Earrings Set","category":"Jewellery","subCategory":"Necklace Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":649.0,"mrp":899.0,"reorder":5,"image":"assets/cloudvibes/21_Traditional_Maharashtrian_Necklace_and_Earrings_Set.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Maharashtrian Traditional"},{"id":"CLOUDVIBES-022","sku":"CV-022","asin":"","name":"Traditional Nathani Nose Pin Set","category":"Jewellery","subCategory":"Nathani / Nose Pin","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":875.0,"mrp":999.0,"reorder":5,"image":"assets/cloudvibes/22_Traditional_Nathani_Nose_Pin_Set.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Nath & Accessories","collection":"Maharashtrian Traditional"},{"id":"CLOUDVIBES-023","sku":"CV-023","asin":"","name":"Traditional Maharashtrian Jewellery Set","category":"Jewellery","subCategory":"Jewellery Set","openingQty":0,"openingDate":"","openingCost":0,"stock":0,"purchaseCost":0,"sellingPrice":849.0,"mrp":1149.0,"reorder":5,"image":"assets/cloudvibes/23_Traditional_Maharashtrian_Jewellery_Set.jpg","recipe":[],"source":"CloudVibes Amazon","masterCategory":"Necklaces & Sets","collection":"Maharashtrian Traditional"}];
 function importCloudVibesProducts(silent=false){
  let added=0,updated=0;
  CLOUDVIBES_PRODUCTS.forEach(seed=>{
@@ -357,7 +406,9 @@ function importCloudVibesProducts(silent=false){
      existing.mrp=seed.mrp;
      existing.sellingPrice=seed.sellingPrice;
      existing.image=seed.image;
+     existing.masterCategory=seed.masterCategory;
      existing.subCategory=seed.subCategory;
+     existing.collection=seed.collection;
      existing.source='CloudVibes Amazon';
      updated++;
    }else{
@@ -373,10 +424,47 @@ if(!db.items.some(x=>x.source==='CloudVibes Amazon')){
  CLOUDVIBES_PRODUCTS.forEach(seed=>db.items.push({...seed}));
  localStorage.setItem(KEY,JSON.stringify(db));
 }
+const MASTER_CATEGORIES=['Necklaces & Sets','Mangalsutra','Bangles & Rings','Nath & Accessories','Festive & Decor'];
+function ensureCategorization(){
+ const bySku=Object.fromEntries(CLOUDVIBES_PRODUCTS.map(x=>[x.sku,x]));
+ db.items.forEach(x=>{
+   if(isProduct(x)){
+     const seed=bySku[x.sku];
+     if(seed){x.masterCategory=seed.masterCategory;x.subCategory=seed.subCategory;x.collection=seed.collection}
+     else{x.masterCategory=x.masterCategory||'Necklaces & Sets';x.subCategory=x.subCategory||'Other Jewellery';x.collection=x.collection||'Unassigned'}
+   }else{
+     x.masterCategory=x.masterCategory||'Materials & Packaging';
+     x.subCategory=x.subCategory||x.category||'Other';
+     x.collection=x.collection||'Operations';
+   }
+ });
+ localStorage.setItem(KEY,JSON.stringify(db));
+}
 let editItemId=null,currentOrderAction='received';
 function money(n){return '₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function persist(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+const CLOUD_SYNC_KEY='sellerStudioCloudSync';
+let cloudEnabled=localStorage.getItem(CLOUD_SYNC_KEY)==='1';
+let cloudTimer=null;
+function persist(){localStorage.setItem(KEY,JSON.stringify(db));renderAll();if(cloudEnabled)queueCloudSync()}
+function setDbStatus(state,text,detail=''){
+ const dot=document.getElementById('dbStatusDot'),label=document.getElementById('dbStatusText'),d=document.getElementById('dbStatusDetail');
+ if(dot){dot.className='db-dot '+state}if(label)label.textContent=text;if(d&&detail)d.innerHTML=detail;
+}
+async function testDatabase(silent=false){
+ try{const r=await fetch('/api/health',{cache:'no-store'});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'Database not ready');setDbStatus('ok','Connected',`Cloudflare D1 is connected. Last check: ${new Date().toLocaleString()}`);return true}catch(e){setDbStatus('bad','Not connected',`D1/API is not ready: ${esc(e.message)}. Follow D1_SETUP.md and bind the database as <strong>DB</strong>.`);if(!silent)alert('Cloud database is not connected yet.');return false}
+}
+function queueCloudSync(){clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>syncCloudState(true),500)}
+async function syncCloudState(silent=false){
+ if(!cloudEnabled)return false;
+ try{setDbStatus('warn','Syncing…','Saving the latest Seller Studio records to Cloudflare D1.');const r=await fetch('/api/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({state:db})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'Sync failed');setDbStatus('ok','Cloud synced',`Last cloud update: ${new Date(j.updatedAt||Date.now()).toLocaleString()}`);return true}catch(e){setDbStatus('bad','Sync error',esc(e.message));if(!silent)alert('Cloud sync failed: '+e.message);return false}
+}
+async function enableCloudSync(){if(!await testDatabase(true))return alert('Connect the D1 database first.');cloudEnabled=true;localStorage.setItem(CLOUD_SYNC_KEY,'1');const ok=await syncCloudState(false);if(ok)alert('Cloud sync enabled. Future saves will update D1 automatically.')}
+function disableCloudSync(){cloudEnabled=false;localStorage.removeItem(CLOUD_SYNC_KEY);setDbStatus('warn','Cloud sync disabled','Seller Studio is using the local browser copy only.');}
+async function loadCloudData(){
+ if(!confirm('Replace the current browser copy with the latest cloud database copy?'))return;
+ try{const r=await fetch('/api/state',{cache:'no-store'});const j=await r.json();if(!r.ok||!j.ok||!j.state)throw new Error(j.error||'No cloud data found');db=j.state;if(!db.purchases)db.purchases=[];ensureCategorization();localStorage.setItem(KEY,JSON.stringify(db));renderAll();setDbStatus('ok','Cloud data loaded',`Loaded: ${new Date(j.updatedAt||Date.now()).toLocaleString()}`)}catch(e){alert('Unable to load cloud data: '+e.message)}
+}
 function closeModal(id){document.getElementById(id).classList.remove('show')}
 function itemById(id){return db.items.find(x=>x.id===id)}
 function isProduct(x){return x.category==='Jewellery'}
@@ -396,8 +484,9 @@ function getImage(cb){const f=iImage.files[0];if(!f)return cb(null);const r=new 
 function openItemModal(id=null){
 editItemId=id;const x=id?itemById(id):null;
 itemModalTitle.textContent=x?'Edit Inventory Item':'Add Inventory Item';
-iSku.value=x?.sku||'';iName.value=x?.name||'';iCategory.value=x?.category||'Jewellery';iQty.value=x?.openingQty??'';iDate.value=x?.openingDate||new Date().toISOString().slice(0,10);iCost.value=x?.openingCost??x?.purchaseCost??'';iSelling.value=x?.sellingPrice??'';iReorder.value=x?.reorder??5;iImage.value='';itemModal.classList.add('show');
+iSku.value=x?.sku||'';iName.value=x?.name||'';iCategory.value=x?.category||'Jewellery';iMasterCategory.value=x?.masterCategory||(x?.category==='Jewellery'?'Necklaces & Sets':'Materials & Packaging');iSubCategory.value=x?.subCategory||'';iCollection.value=x?.collection||'';iQty.value=x?.openingQty??'';iDate.value=x?.openingDate||new Date().toISOString().slice(0,10);iCost.value=x?.openingCost??x?.purchaseCost??'';iSelling.value=x?.sellingPrice??'';iReorder.value=x?.reorder??5;iImage.value='';itemModal.classList.add('show');
 }
+function handleItemTypeChange(){if(iCategory.value!=='Jewellery'){iMasterCategory.value='Materials & Packaging';if(!iCollection.value)iCollection.value='Operations'}else if(iMasterCategory.value==='Materials & Packaging'){iMasterCategory.value='Necklaces & Sets';}}
 function recalcAverageCost(itemId){
  const x=itemById(itemId);if(!x)return;
  const ps=db.purchases.filter(p=>p.itemId===itemId);
@@ -428,12 +517,12 @@ function saveItem(){
      const x=itemById(editItemId),delta=qty-(x.openingQty||0);
      x.stock=(x.stock||0)+delta;
      x.openingQty=qty;x.openingDate=openDate;x.openingCost=cost;
-     x.sku=iSku.value.trim();x.name=iName.value.trim();x.category=iCategory.value;
+     x.sku=iSku.value.trim();x.name=iName.value.trim();x.category=iCategory.value;x.masterCategory=iMasterCategory.value;x.subCategory=iSubCategory.value.trim();x.collection=iCollection.value.trim();
      x.sellingPrice=+iSelling.value||0;x.reorder=+iReorder.value||0;if(x.mrp==null)x.mrp=0;if(x.asin==null)x.asin='';if(img)x.image=img;
      upsertOpeningPurchase(x);
    }else{
      const id=Date.now().toString();
-     const x={id,sku:iSku.value.trim(),asin:'',name:iName.value.trim(),category:iCategory.value,subCategory:'',openingQty:qty,openingDate:openDate,openingCost:cost,stock:qty,purchaseCost:cost,sellingPrice:+iSelling.value||0,mrp:0,reorder:+iReorder.value||0,image:img||'',recipe:[]};
+     const x={id,sku:iSku.value.trim(),asin:'',name:iName.value.trim(),category:iCategory.value,masterCategory:iMasterCategory.value,subCategory:iSubCategory.value.trim(),collection:iCollection.value.trim(),openingQty:qty,openingDate:openDate,openingCost:cost,stock:qty,purchaseCost:cost,sellingPrice:+iSelling.value||0,mrp:0,reorder:+iReorder.value||0,image:img||'',recipe:[]};
      db.items.push(x);upsertOpeningPurchase(x);
    }
    closeModal('itemModal');persist();
@@ -509,15 +598,40 @@ function renderPurchases(){
  </table>`:'<div class="empty">No purchase history yet.</div>';
 }
 
+let activeMasterCategory='All';
+function renderCategorySummary(){
+ const el=document.getElementById('categorySummary');if(!el)return;
+ el.innerHTML=MASTER_CATEGORIES.map(c=>{const count=products().filter(p=>p.masterCategory===c).length;return `<button class="cat-card ${activeMasterCategory===c?'active':''}" onclick="setInventoryMaster('${c.replaceAll("'","\\'")}')"><strong>${esc(c)}</strong><span>${count} SKU${count===1?'':'s'}</span></button>`}).join('');
+}
+function refreshInventoryFilters(){
+ const mf=document.getElementById('inventoryMasterFilter'),sf=document.getElementById('inventorySubFilter'),cf=document.getElementById('inventoryCollectionFilter');if(!mf||!sf||!cf)return;
+ const prevM=mf.value||activeMasterCategory||'All',prevS=sf.value||'All',prevC=cf.value||'All';
+ mf.innerHTML='<option value="All">All Master Categories</option>'+[...new Set(db.items.map(x=>x.masterCategory).filter(Boolean))].sort().map(x=>`<option>${esc(x)}</option>`).join('');
+ mf.value=[...mf.options].some(o=>o.value===prevM)?prevM:'All';activeMasterCategory=mf.value;
+ const baseM=mf.value==='All'?db.items:db.items.filter(x=>x.masterCategory===mf.value);
+ sf.innerHTML='<option value="All">All Subcategories</option>'+[...new Set(baseM.map(x=>x.subCategory).filter(Boolean))].sort().map(x=>`<option>${esc(x)}</option>`).join('');sf.value=[...sf.options].some(o=>o.value===prevS)?prevS:'All';
+ const baseS=sf.value==='All'?baseM:baseM.filter(x=>x.subCategory===sf.value);
+ cf.innerHTML='<option value="All">All Collections</option>'+[...new Set(baseS.map(x=>x.collection).filter(Boolean))].sort().map(x=>`<option>${esc(x)}</option>`).join('');cf.value=[...cf.options].some(o=>o.value===prevC)?prevC:'All';
+}
+function inventoryFilterChanged(){activeMasterCategory=inventoryMasterFilter.value;refreshInventoryFilters();renderInventory()}
+function setInventoryMaster(c){activeMasterCategory=c;refreshInventoryFilters();inventoryMasterFilter.value=c;refreshInventoryFilters();renderInventory()}
+function clearInventoryFilters(){activeMasterCategory='All';if(inventorySearch)inventorySearch.value='';refreshInventoryFilters();inventoryMasterFilter.value='All';inventorySubFilter.value='All';inventoryCollectionFilter.value='All';renderInventory()}
+function filteredInventoryItems(){
+ const m=document.getElementById('inventoryMasterFilter')?.value||'All',s=document.getElementById('inventorySubFilter')?.value||'All',c=document.getElementById('inventoryCollectionFilter')?.value||'All',q=(document.getElementById('inventorySearch')?.value||'').trim().toLowerCase();
+ return db.items.filter(x=>(m==='All'||x.masterCategory===m)&&(s==='All'||x.subCategory===s)&&(c==='All'||x.collection===c)&&(!q||`${x.name||''} ${x.sku||''} ${x.asin||''} ${x.masterCategory||''} ${x.subCategory||''} ${x.collection||''}`.toLowerCase().includes(q)));
+}
 function renderInventory(){
- inventoryTable.innerHTML=db.items.length?`<table>
- <tr><th>Image</th><th>SKU</th><th>ASIN</th><th>Product / Material</th><th>Category</th><th>Opening Qty</th><th>Purchased Qty</th><th>Avg Purchase Cost</th><th>Amazon Price</th><th>MRP</th><th>Used / Sold</th><th>Balance Qty</th><th>Current Value</th><th>Last Purchase</th><th></th></tr>
- ${db.items.map(x=>`<tr>
+ refreshInventoryFilters();renderCategorySummary();
+ const rows=filteredInventoryItems();
+ inventoryTable.innerHTML=rows.length?`<table>
+ <tr><th>Image</th><th>SKU</th><th>ASIN</th><th>Product / Material</th><th>Master Category / Subcategory</th><th>Collection</th><th>Opening Qty</th><th>Purchased Qty</th><th>Avg Purchase Cost</th><th>Amazon Price</th><th>MRP</th><th>Used / Sold</th><th>Balance Qty</th><th>Current Value</th><th>Last Purchase</th><th></th></tr>
+ ${rows.map(x=>`<tr>
    <td>${thumb(x)}</td>
    <td>${esc(x.sku||'-')}</td>
    <td>${esc(x.asin||'-')}</td>
    <td><strong>${esc(x.name)}</strong>${x.source==='CloudVibes Amazon'?'<div class="small">CloudVibes Amazon</div>':''}</td>
-   <td>${esc(x.subCategory||x.category)}</td>
+   <td><div class="catline">${esc(x.masterCategory||'-')}</div><div class="subline">${esc(x.subCategory||x.category||'-')}</div></td>
+   <td>${x.collection?`<span class="collection-tag">${esc(x.collection)}</span>`:'-'}</td>
    <td>${x.openingQty||0}</td>
    <td>${purchasedQty(x.id)}</td>
    <td>${money(x.purchaseCost)}</td>
@@ -529,7 +643,7 @@ function renderInventory(){
    <td>${esc(lastPurchaseDate(x.id))}</td>
    <td><div class="row"><button class="btn warn" onclick="openPurchaseModal('${x.id}')">Buy</button><button class="btn" onclick="openItemModal('${x.id}')">Edit</button><button class="btn danger" onclick="deleteItem('${x.id}')">Delete</button></div></td>
  </tr>`).join('')}
- </table>`:'<div class="empty">No inventory yet.</div>';
+ </table>`:'<div class="empty">No items match the selected category/filter.</div>';
 }
 function refreshSetupProducts(){const cur=setupProduct.value;setupProduct.innerHTML=products().map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');if(cur&&products().some(p=>p.id===cur))setupProduct.value=cur}
 function renderSetup(){
@@ -640,7 +754,7 @@ function renderAll(){
  sFulfil.value=db.settings.fulfilment||0;sMarketplace.value=db.settings.marketplace||0;sTransport.value=db.settings.transport||0;sOfflineCourier.value=db.settings.offlineCourier||0;sWhatsappFee.value=db.settings.whatsappFee||0;sWhatsappCourier.value=db.settings.whatsappCourier||0;sWebsiteFee.value=db.settings.websiteFee||0;sWebsiteCourier.value=db.settings.websiteCourier||0;sOtherMarketFee.value=db.settings.otherMarketFee||0;sOtherMarketCourier.value=db.settings.otherMarketCourier||0;
  localStorage.setItem(KEY,JSON.stringify(db));
 }
-renderAll();
+ensureCategorization();renderAll();if(cloudEnabled)setTimeout(()=>testDatabase(true),250);
 </script>
 
 <script id="cloudvibes-mobile-nav-v76">
