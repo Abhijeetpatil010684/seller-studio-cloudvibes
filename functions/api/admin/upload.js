@@ -17,14 +17,18 @@ export async function onRequestPost({ request, env }) {
     return fail('Invalid Cloudinary cloud name.', 503);
   }
 
-  const limit = 10 * 1024 * 1024;
+  // Application limit: 20 MB per upload.
+  const limit = 20 * 1024 * 1024;
 
   if (Number(request.headers.get('content-length')) > limit) {
-    return fail('Choose a photo smaller than 10 MB.', 413);
+    return fail('Choose a file smaller than 20 MB.', 413);
   }
 
   const reader = request.body?.getReader();
-  if (!reader) return fail('Choose a photo first.');
+
+  if (!reader) {
+    return fail('Choose a photo or video first.');
+  }
 
   const chunks = [];
   let size = 0;
@@ -37,7 +41,7 @@ export async function onRequestPost({ request, env }) {
 
     if (size > limit) {
       await reader.cancel();
-      return fail('Choose a photo smaller than 10 MB.', 413);
+      return fail('Choose a file smaller than 20 MB.', 413);
     }
 
     chunks.push(value);
@@ -51,6 +55,7 @@ export async function onRequestPost({ request, env }) {
     offset += chunk.length;
   }
 
+  const decode = value => new TextDecoder().decode(value);
   let type = '';
   let ext = '';
 
@@ -71,17 +76,35 @@ export async function onRequestPost({ request, env }) {
     ext = 'png';
   } else if (
     size >= 12 &&
-    new TextDecoder().decode(bytes.slice(0, 4)) === 'RIFF' &&
-    new TextDecoder().decode(bytes.slice(8, 12)) === 'WEBP'
+    decode(bytes.slice(0, 4)) === 'RIFF' &&
+    decode(bytes.slice(8, 12)) === 'WEBP'
   ) {
     type = 'image/webp';
     ext = 'webp';
+  } else if (
+    size >= 12 &&
+    decode(bytes.slice(4, 8)) === 'ftyp'
+  ) {
+    type = 'video/mp4';
+    ext = 'mp4';
+  } else if (
+    size >= 4 &&
+    bytes.slice(0, 4).join(',') === '26,69,223,163'
+  ) {
+    type = 'video/webm';
+    ext = 'webm';
   } else {
-    return fail('Choose a JPG, PNG or WebP photo.');
+    return fail(
+      'Choose a JPG, PNG, WebP, MP4 or WebM file.'
+    );
   }
+
+  const resourceType =
+    type.startsWith('video/') ? 'video' : 'image';
 
   const publicId = 'cloudvibes/' + crypto.randomUUID();
   const timestamp = String(Math.floor(Date.now() / 1000));
+
   const signed =
     `public_id=${publicId}&timestamp=${timestamp}${secret}`;
 
@@ -96,10 +119,11 @@ export async function onRequestPost({ request, env }) {
   ).join('');
 
   const form = new FormData();
+
   form.append(
     'file',
     new Blob([bytes], { type }),
-    'photo.' + ext
+    'media.' + ext
   );
   form.append('public_id', publicId);
   form.append('timestamp', timestamp);
@@ -108,7 +132,7 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloud}/image/upload`,
+      `https://api.cloudinary.com/v1_1/${cloud}/${resourceType}/upload`,
       {
         method: 'POST',
         body: form
@@ -119,7 +143,7 @@ export async function onRequestPost({ request, env }) {
 
     if (!response.ok) {
       return fail(
-        'Cloudinary rejected the upload. Check credentials and available credits.',
+        'Cloudinary rejected the upload. Check credentials, file format and available credits.',
         502
       );
     }
@@ -134,10 +158,12 @@ export async function onRequestPost({ request, env }) {
     }
 
     return Response.json({
-      image: url.href,
+      image: resourceType === 'image' ? url.href : '',
+      url: url.href,
+      type: resourceType,
       publicId: result.public_id
     });
   } catch {
-    return fail('Photo upload failed. Please try again.', 502);
+    return fail('Media upload failed. Please try again.', 502);
   }
 }
