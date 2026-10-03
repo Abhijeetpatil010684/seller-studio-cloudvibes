@@ -2,41 +2,609 @@ import React,{useState,useEffect} from 'react';
 import {createRoot} from 'react-dom/client';
 import {emptyState,today,id,money,categories,financials,metrics,addProduct,buy,sale,returnSale,cancelSale,adjust,advanceStatus,validateState} from './model.js';
 import './style.css';
+
 const admin=location.pathname==='/admin'||location.pathname.startsWith('/admin/');
-async function api(path,options={}){const response=await fetch(path,{credentials:'same-origin',...options});let data;try{data=await response.json()}catch{throw Error('Sign in again or check the Cloudflare setup.')}if(!response.ok)throw Error(data.error||'Unable to complete this action');return data}
-function Photo({item}){return item.image?<img src={item.image} alt={item.name} onError={e=>e.currentTarget.style.visibility='hidden'}/>:<div className="no-photo">{admin?'Add a product photo':'Photo coming soon'}</div>}
-function Field({label,children}){return <label className="field"><span>{label}</span>{children}</label>}
-function Input({label,name,defaultValue='',type='text',required=false,...props}){return <Field label={label}><input name={name} type={type} defaultValue={defaultValue} required={required} {...props}/></Field>}
-function Dialog({title,onClose,children}){return <div className="overlay" onClick={onClose}><section className="dialog" role="dialog" aria-modal="true" aria-label={title} onClick={e=>e.stopPropagation()}><header><h2>{title}</h2><button className="icon" aria-label="Close" onClick={onClose}>×</button></header>{children}</section></div>}
-function ProductCard({item,actions}){return <article className="product"><div className="photo"><Photo item={item}/></div><div className="product-body"><small>{item.category} {item.subcategory&&' / '+item.subcategory}</small><h3>{item.name}</h3><strong className="price">{money(item.price)}</strong><span className={item.stock===0||item.available===false?'out':'stock'}>{admin?item.stock+' available':item.available?'In stock':'Out of stock'}</span>{admin&&<small>{item.published?'Visible on website':'Hidden from website'}</small>}{actions}</div></article>}
-function Catalogue(){const [data,setData]=useState(null),[error,setError]=useState(''),[query,setQuery]=useState(''),[category,setCategory]=useState('All'),[sub,setSub]=useState('All'),[selected,setSelected]=useState(null);async function load(){setError('');try{setData(await api('/api/catalogue'))}catch(e){setError(e.message)}}useEffect(()=>{load()},[]);const list=data?.products||[],subs=[...new Set(list.filter(x=>category==='All'||x.category===category).map(x=>x.subcategory).filter(Boolean))],rows=list.filter(x=>(category==='All'||x.category===category)&&(sub==='All'||x.subcategory===sub)&&x.name.toLowerCase().includes(query.toLowerCase()));const enquire=p=>`https://wa.me/${data.whatsapp}?text=${encodeURIComponent('Hello, I would like to enquire about '+p.name+' ('+money(p.price)+'). Product ID: '+p.id)}`;return <><header className="shop-header"><a href="/" className="brand">{data?.storeName||'CloudVibes'}<small>Jewellery · Clothing · Home</small></a><a href="/admin" className="quiet-link">Store login</a></header><main className="shop"><div className="heading"><div><p className="eyebrow">THE COLLECTION</p><h1>Find something you love.</h1></div></div><div className="filters"><input aria-label="Search products" placeholder="Search products" value={query} onChange={e=>setQuery(e.target.value)}/><select aria-label="Category" value={category} onChange={e=>{setCategory(e.target.value);setSub('All')}}><option>All</option>{[...new Set(list.map(x=>x.category))].map(x=><option key={x}>{x}</option>)}</select><select aria-label="Subcategory" value={sub} onChange={e=>setSub(e.target.value)}><option>All</option>{subs.map(x=><option key={x}>{x}</option>)}</select></div>{error?<div className="notice">{error}<button onClick={load}>Try again</button></div>:!data?<p>Loading products…</p>:rows.length?<div className="products">{rows.map(p=><ProductCard key={p.id} item={p} actions={<button onClick={()=>setSelected(p)}>View product</button>}/>)}</div>:<div className="empty"><h2>{list.length?'No matching products':'Our collection is coming soon'}</h2><p>{list.length?'Try another category or search.':'New products will appear here as they are added.'}</p></div>}</main>{selected&&<Dialog title={selected.name} onClose={()=>setSelected(null)}><div className="detail-photo"><Photo item={selected}/></div><p>{selected.description}</p><h2>{money(selected.price)}</h2><p>{selected.available?'In stock':'Currently out of stock'}</p>{data.whatsapp?<a className="button primary" href={enquire(selected)} target="_blank" rel="noreferrer">Enquire on WhatsApp</a>:<p>Online ordering is not available yet.</p>}</Dialog>}</>}
-function Admin(){const [db,setDb]=useState(null),[revision,setRevision]=useState(0),[error,setError]=useState(''),[busy,setBusy]=useState(false),[view,setView]=useState('Home'),[modal,setModal]=useState(null),[query,setQuery]=useState(''),[cat,setCat]=useState('All'),[stage,setStage]=useState('All'),[notice,setNotice]=useState('');async function load(){setBusy(true);setError('');try{const data=await api('/api/admin/state');setDb(data.state);setRevision(data.revision)}catch(e){setError(e.message)}finally{setBusy(false)}}useEffect(()=>{load()},[]);
- async function change(fn){if(busy)return;setBusy(true);setError('');try{const draft=structuredClone(db);fn(draft);validateState(draft);const result=await api('/api/admin/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({state:draft,revision})});setDb(draft);setRevision(result.revision);setModal(null);setNotice('Saved');setTimeout(()=>setNotice(''),2500)}catch(e){setError(e.message)}finally{setBusy(false)}}
- const products=db?.items.filter(x=>x.type==='Product')||[],packaging=db?.items.filter(x=>x.type==='Packaging')||[],stats=db?metrics(db):{},filtered=db?.items.filter(x=>(cat==='All'||x.category===cat)&&[x.name,x.sku,x.subcategory].join(' ').toLowerCase().includes(query.toLowerCase()))||[];
- const tabs=['Home','Products','Sales','Purchases','Packaging','Expenses','Reports','Settings'];const open=(type,item=null)=>{setError('');setModal({type,item})};return <div className="admin-shell"><aside><a className="brand" href="/">CloudVibes<small>SELLER STUDIO</small></a><nav>{tabs.map(t=><button className={view===t?'active':''} key={t} onClick={()=>{setView(t);setQuery('');setCat('All')}}>{t}</button>)}</nav><a href="/" target="_blank" className="store-link">View customer website</a><a href="/cdn-cgi/access/logout" className="store-link">Sign out</a></aside><main className="workspace"><div className="heading"><div><p className="eyebrow">YOUR SHOP</p><h1>{view}</h1></div>{db&&<div className="actions"><button onClick={()=>open('product')}>Add product</button><button onClick={()=>open('purchase')}>Add stock</button><button className="primary" onClick={()=>open('sale')}>Add sale</button></div>}</div>{error&&<div role="alert" className="notice error">{error}<button onClick={load} disabled={busy}>Reload saved data</button></div>}{notice&&<div role="status" className="toast">{notice}</div>}{!db?<section className="empty"><h2>{busy?'Loading your shop…':'Connect your shop'}</h2><p>Admin sign-in and database setup are required. See SETUP.md in the project package.</p><button onClick={load} disabled={busy}>Retry connection</button></section>:<>
- {view==='Home'&&<><div className="kpis">{[['Sales',stats.revenue],['Net profit',stats.profit],['Stock value',stats.stockValue]].map(([label,v])=><div className="kpi" key={label}><span>{label}</span><strong>{money(v)}</strong><small>All recorded activity</small></div>)}</div><div className="split"><section className="panel"><h2>Ready for your next entry</h2><p>Choose a product, enter the quantity and save.</p><div className="actions"><button className="primary" onClick={()=>{setView('Products')}}>Browse products</button><button onClick={()=>open('sale')}>Record a sale</button></div></section><section className="panel"><h2>Needs attention</h2><p><b>{db.orders.filter(o=>['New','Ready to Dispatch'].includes(o.status)).length}</b> orders to dispatch</p><p><b>{products.filter(p=>p.stock<=p.reorder).length}</b> products low on stock</p></section></div><section className="panel"><h2>Recent sales</h2>{db.orders.slice(0,5).map(o=><SaleRow key={o.id} order={o} onOpen={()=>{setView('Sales')}}/>)}{!db.orders.length&&<p>No sales yet. Your first sale starts here.</p>}</section></>}
- {(view==='Products'||view==='Packaging')&&<><div className="filters"><input aria-label="Search inventory" placeholder="Search name or SKU" value={query} onChange={e=>setQuery(e.target.value)}/><select aria-label="Category" value={cat} onChange={e=>setCat(e.target.value)}><option>All</option>{categories.map(c=><option key={c}>{c}</option>)}</select>{view==='Packaging'&&<button onClick={()=>open('product',{type:'Packaging'})}>Add packaging</button>}</div><div className="products">{filtered.filter(x=>x.type===(view==='Packaging'?'Packaging':'Product')).map(p=><ProductCard key={p.id} item={p} actions={<div className="card-actions">{p.type==='Product'&&<button className="primary" disabled={!p.stock} onClick={()=>open('sale',p)}>Sell</button>}<button onClick={()=>open('purchase',p)}>Buy stock</button><button onClick={()=>open('product',p)}>Edit</button><button onClick={()=>open('adjust',p)}>Damage / loss</button></div>}/>)}</div>{!db.items.some(p=>p.type===(view==='Packaging'?'Packaging':'Product'))&&<section className="empty"><h2>{view==='Packaging'?'Add your packaging supplies':'Add your first product'}</h2><p>Start with a name, photo, cost, price and available quantity.</p><button className="primary" onClick={()=>open('product',view==='Packaging'?{type:'Packaging'}:null)}>Add {view==='Packaging'?'packaging':'product'}</button></section>}</>}
- {view==='Sales'&&<><div className="filters"><input aria-label="Search sales" placeholder="Search customer, product or order" value={query} onChange={e=>setQuery(e.target.value)}/><select aria-label="Order status" value={stage} onChange={e=>setStage(e.target.value)}>{['All','New','Ready to Dispatch','Dispatched','Delivered','Returned','Cancelled'].map(s=><option key={s}>{s}</option>)}</select></div>{db.orders.filter(o=>(stage==='All'||o.status===stage)&&[o.name,o.ref,o.customer].join(' ').toLowerCase().includes(query.toLowerCase())).map(o=><SaleRow key={o.id} order={o} actions={<><select aria-label={'Status for '+o.ref} value={o.status} disabled={busy||['Returned','Cancelled'].includes(o.status)} onChange={e=>change(d=>advanceStatus(d,o.id,e.target.value))}>{[...new Set(['New','Ready to Dispatch','Dispatched','Delivered',o.status])].map(x=><option key={x}>{x}</option>)}</select>{financials(o).netQty>0&&<button onClick={()=>open('return',o)}>Return</button>}{['New','Ready to Dispatch'].includes(o.status)&&!o.resellable&&!o.damagedReturn&&<button disabled={busy} onClick={()=>{if(confirm('Cancel this unshipped sale? Product and unused packaging stock will be restored.'))change(d=>cancelSale(d,o.id))}}>Cancel</button>}</>}/>)}{!db.orders.length&&<div className="empty">No sales recorded.</div>}</>}
- {view==='Purchases'&&<section className="panel"><h2>Purchase history</h2><div className="table-wrap"><table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit cost</th><th>Total</th><th>Supplier</th></tr></thead><tbody>{db.purchases.map(p=><tr key={p.id}><td>{p.date}</td><td>{p.name}</td><td>{p.qty}</td><td>{money(p.cost)}</td><td>{money(p.total)}</td><td>{p.vendor}</td></tr>)}</tbody></table></div>{!db.purchases.length&&<p>No purchases yet.</p>}</section>}
- {view==='Expenses'&&<section className="panel"><div className="heading"><h2>Business expenses</h2><button onClick={()=>open('expense')}>Add expense</button></div>{db.expenses.map(x=><div className="sale-row" key={x.id}><span>{x.date} · {x.name}</span><strong>{money(x.amount)}</strong></div>)}{!db.expenses.length&&<p>No expenses yet.</p>}</section>}
- {view==='Reports'&&<><div className="kpis">{[['Revenue',stats.revenue],['Direct costs',stats.direct],['Damage / stock losses',stats.writeoff],['Business expenses',stats.overhead],['Net profit',stats.profit],['Stock value',stats.stockValue]].map(([t,v])=><div className="kpi" key={t}><span>{t}</span><strong>{money(v)}</strong></div>)}</div><section className="panel"><h2>Product performance</h2><div className="table-wrap"><table><thead><tr><th>Product</th><th>Net units</th><th>Revenue</th><th>Order profit</th><th>Balance</th></tr></thead><tbody>{products.map(p=>{const f=db.orders.filter(o=>o.productId===p.id).map(financials);return <tr key={p.id}><td>{p.name}</td><td>{f.reduce((s,x)=>s+x.netQty,0)}</td><td>{money(f.reduce((s,x)=>s+x.revenue,0))}</td><td>{money(f.reduce((s,x)=>s+x.profit,0))}</td><td>{p.stock}</td></tr>})}</tbody></table></div><p className="hint">Order profit includes product, packaging, entered fees, delivery charges and returns. Business expenses and stock losses are deducted separately above. Enter actual platform charges; fees and tax are not fetched automatically.</p></section></>}
- {view==='Settings'&&<section className="panel"><h2>Customer website</h2><form onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);change(d=>{d.settings={...d.settings,storeName:f.get('storeName'),whatsapp:f.get('whatsapp')}})}}><div className="form-grid"><Input label="Store name" name="storeName" required defaultValue={db.settings.storeName}/><Input label="WhatsApp number, country code included" name="whatsapp" defaultValue={db.settings.whatsapp} placeholder="919876543210" pattern="[0-9]{10,15}"/></div><button className="primary" disabled={busy}>Save settings</button></form><hr/><h2>Backup</h2><button onClick={()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.href=url;a.download='cloudvibes-backup-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}}>Download backup</button><p className="hint">Inventory is saved in your database. A backup includes private business records.</p></section>}
- </>}{db&&modal&&<EntryDialog modal={modal} db={db} busy={busy} change={change} onClose={()=>setModal(null)} onError={setError} error={error}/>}</main></div>}
-function SaleRow({order:o,actions,onOpen}){const f=financials(o);return <article className="sale-row"><div className="sale-info"><strong>{o.name}</strong><small>{o.ref} · {o.customer||o.channel} · {o.date}</small><span>{f.netQty} units · {o.status}{o.resellable+o.damagedReturn>0?' · '+(o.resellable+o.damagedReturn)+' returned':''}</span></div><div><strong>{money(f.revenue)}</strong><small>Profit {money(f.profit)}</small></div><div className="card-actions">{actions}{onOpen&&<button onClick={onOpen}>Manage</button>}</div></article>}
-function EntryDialog({modal,db,busy,change,onClose,onError,error}){const p=modal.item||{},kind=modal.type,[selected,setSelected]=useState(p.id||db.items.find(x=>kind==='sale'?x.type==='Product':true)?.id||''),[qty,setQty]=useState(1),[price,setPrice]=useState(p.price??db.items.find(x=>x.id===selected)?.price??0),[fee,setFee]=useState(0),[shipping,setShipping]=useState(0),[other,setOther]=useState(0),[uploading,setUploading]=useState(false),[recipe,setRecipe]=useState(p.recipe||[]);const item=db.items.find(x=>x.id===selected),packCost=(item?.recipe||[]).reduce((s,r)=>s+(db.items.find(x=>x.id===r.itemId)?.cost||0)*r.qty,0)*qty;const titles={product:p.id?'Edit product':'Add product',purchase:'Add stock',sale:'Add sale',return:'Record return',adjust:'Record damage or loss',expense:'Add expense'};
- async function submit(e){e.preventDefault();const f=new FormData(e.currentTarget),n=k=>Number(f.get(k)||0),s=k=>String(f.get(k)||'').trim();let image=p.image||'';if(kind==='product')image=s('image');await change(d=>{if(kind==='product'){const input={name:s('name'),type:s('type'),category:s('category'),subcategory:s('subcategory'),sku:s('sku'),description:s('description'),price:n('price'),cost:n('cost'),qty:n('qty'),reorder:n('reorder'),published:f.get('published')==='on',image,recipe};if(p.id){const existing=d.items.find(x=>x.id===p.id);Object.assign(existing,{name:input.name,category:input.category,subcategory:input.subcategory,sku:input.sku,description:input.description,price:input.price,reorder:input.reorder,published:input.published,image,recipe})}else addProduct(d,input)}else if(kind==='purchase')buy(d,selected,n('qty'),n('cost'),n('extra'),s('date'),s('vendor'));else if(kind==='sale')sale(d,{productId:selected,qty:+qty,price:+price,fee:+fee,shipping:+shipping,other:+other,date:s('date'),ref:s('ref'),customer:s('customer'),phone:s('phone'),channel:s('channel')});else if(kind==='return')returnSale(d,p.id,n('qty'),f.get('resellable')==='yes',n('returnCost'),n('refund'));else if(kind==='adjust')adjust(d,p.id,n('qty'),s('lossType'),s('note'),s('date'));else if(kind==='expense')d.expenses.unshift({id:id(),date:s('date'),name:s('name'),amount:n('amount')})});}
- return <Dialog title={titles[kind]} onClose={onClose}>{error&&<div role="alert" className="notice error">{error}</div>}<form onSubmit={submit}><div className="form-grid">
- {kind==='product'&&<><Input label="Product / item name" name="name" defaultValue={p.name} required/><Field label="Item type"><select name="type" defaultValue={p.type||'Product'} disabled={!!p.id}><option>Product</option><option>Packaging</option></select>{p.id&&<input type="hidden" name="type" value={p.type}/>}</Field><Field label="Category"><select name="category" defaultValue={p.category||'Jewellery'}>{categories.map(c=><option key={c}>{c}</option>)}</select></Field><Input label="Subcategory (Bangles, Rings, Sarees…)" name="subcategory" defaultValue={p.subcategory}/><Input label="Selling price / unit" name="price" type="number" min="0" step="0.01" defaultValue={p.price||0} required/>{!p.id&&<><Input label="Available quantity" name="qty" type="number" min="0" step="1" defaultValue="0" required/><Input label="Purchase cost / unit" name="cost" type="number" min="0" step="0.01" defaultValue="0" required/></>}<Input label="Photo link or path (optional)" name="image" type="text" defaultValue={p.image||''} placeholder="/assets/cloudvibes/photo.jpg or https://…"/><label className="checkbox"><input name="published" type="checkbox" defaultChecked={p.published||false}/>Show on customer website</label><Field label="Description"><textarea name="description" defaultValue={p.description||''}/></Field><Input label="SKU (optional)" name="sku" defaultValue={p.sku}/><Input label="Low-stock reminder quantity" name="reorder" type="number" min="0" defaultValue={p.reorder??5}/></>}
- {(kind==='purchase'||kind==='sale')&&<Field label={kind==='sale'?'Product':'Item'}><select required value={selected} onChange={e=>{setSelected(e.target.value);setPrice(db.items.find(x=>x.id===e.target.value)?.price||0)}}><option value="">Choose an item</option>{db.items.filter(x=>kind==='sale'?x.type==='Product':true).map(x=><option key={x.id} value={x.id}>{x.name} ({x.stock} available)</option>)}</select></Field>}
- {kind==='sale'&&<><Field label="Quantity"><input required type="number" min="1" step="1" value={qty} onChange={e=>setQty(e.target.value)}/></Field><Field label="Selling price / unit"><input required type="number" min="0" step="0.01" value={price} onChange={e=>setPrice(e.target.value)}/></Field><Field label="Sales channel"><select name="channel"><option>Amazon</option><option>WhatsApp / Instagram</option><option>Offline / Direct</option><option>Website</option><option>Other Marketplace</option></select></Field><Input label="Order reference" name="ref" required defaultValue={'CV-'+Date.now().toString(36).toUpperCase()}/><Input label="Customer name (optional)" name="customer"/><Input label="Phone (optional)" name="phone" type="tel"/></>}
- {kind==='purchase'&&<><Input label="Quantity purchased" name="qty" type="number" min="1" step="1" required/><Input label="Cost / unit" name="cost" type="number" min="0" step="0.01" defaultValue={item?.cost||0} key={selected} required/><Input label="Delivery / other purchase cost" name="extra" type="number" min="0" step="0.01" defaultValue="0"/><Input label="Supplier (optional)" name="vendor"/></>}
- {kind==='return'&&<><p className="wide">{p.name} · {financials(p).netQty} units eligible for return</p><Input label="Return quantity" name="qty" type="number" min="1" max={financials(p).netQty} step="1" defaultValue="1" required/><Field label="Returned item condition"><select name="resellable"><option value="yes">Resellable — restore stock</option><option value="no">Damaged — do not restore stock</option></select></Field><Input label="Additional return charges" name="returnCost" type="number" min="0" step="0.01" defaultValue="0"/><Input label="Fees / delivery charges refunded" name="refund" type="number" min="0" step="0.01" defaultValue="0"/></>}
- {kind==='adjust'&&<><p>{p.name} · {p.stock} available</p><Input label="Quantity lost" name="qty" type="number" min="1" max={p.stock} step="1" required/><Field label="Reason"><select name="lossType"><option>Damaged</option><option>Quality rejected</option><option>Missing stock</option></select></Field><Input label="Notes" name="note"/></>}
- {kind==='expense'&&<><Input label="Expense name" name="name" required/><Input label="Amount" name="amount" type="number" min="0" step="0.01" required/></>}
- {['purchase','sale','adjust','expense'].includes(kind)&&<Input label="Date" name="date" type="date" defaultValue={today()} required/>}
- </div>
- {kind==='product'&&p.type!=='Packaging'&&<details><summary>Packaging used per unit</summary>{db.items.filter(x=>x.type==='Packaging').length?db.items.filter(x=>x.type==='Packaging').map(m=>{const r=recipe.find(x=>x.itemId===m.id);return <div className="recipe" key={m.id}><label><input type="checkbox" checked={!!r} onChange={e=>setRecipe(e.target.checked?[...recipe,{itemId:m.id,qty:1}]:recipe.filter(x=>x.itemId!==m.id))}/>{m.name}</label>{r&&<input aria-label={'Quantity of '+m.name} type="number" min="1" step="1" value={r.qty} onChange={e=>setRecipe(recipe.map(x=>x.itemId===m.id?{...x,qty:+e.target.value}:x))}/>}</div>}):<p>Add packaging supplies from the Packaging tab first.</p>}</details>}
- {kind==='sale'&&<><details><summary>Packaging and charges</summary><p>Packaging is filled from the product setup: {money(packCost)}. Charges below are for the entire order.</p><div className="form-grid">{[['Marketplace / payment fees',fee,setFee],['Delivery charges',shipping,setShipping],['Other costs',other,setOther]].map(([label,v,set])=><Field key={label} label={label}><input type="number" min="0" step="0.01" value={v} onChange={e=>set(e.target.value)}/></Field>)}</div></details><div className="sale-preview"><span>Sale <b>{money(qty*price)}</b></span><span>Cost <b>{money(qty*(item?.cost||0)+packCost+(+fee)+(+shipping)+(+other))}</b></span><span>Profit <b>{money(qty*price-qty*(item?.cost||0)-packCost-fee-shipping-other)}</b></span></div></>}
- {kind==='return'&&<p className="hint">Product costs reverse only for resellable items. Used packaging and charges remain costs unless refunded.</p>}
- <footer><button type="button" onClick={onClose}>Close</button><button className="primary" disabled={busy||uploading}>{uploading?'Uploading photo…':busy?'Saving…':'Save'}</button></footer></form></Dialog>}
+
+async function api(path,options={}){
+  const response=await fetch(path,{credentials:'same-origin',...options});
+  let data;
+  try{data=await response.json()}
+  catch{throw Error('Sign in again or check the Cloudflare setup.')}
+  if(!response.ok)throw Error(data.error||'Unable to complete this action');
+  return data;
+}
+
+function Photo({item}){
+  return item.image
+    ?<img src={item.image} alt={item.name} onError={e=>e.currentTarget.style.visibility='hidden'}/>
+    :<div className="no-photo">{admin?'Add a product photo':'Photo coming soon'}</div>;
+}
+
+function Field({label,children}){
+  return <label className="field"><span>{label}</span>{children}</label>;
+}
+
+function Input({label,name,defaultValue='',type='text',required=false,...props}){
+  return <Field label={label}>
+    <input name={name} type={type} defaultValue={defaultValue} required={required} {...props}/>
+  </Field>;
+}
+
+function Dialog({title,onClose,children}){
+  return <div className="overlay" onClick={onClose}>
+    <section className="dialog" role="dialog" aria-modal="true" aria-label={title} onClick={e=>e.stopPropagation()}>
+      <header>
+        <h2>{title}</h2>
+        <button className="icon" aria-label="Close" onClick={onClose}>×</button>
+      </header>
+      {children}
+    </section>
+  </div>;
+}
+
+function ProductCard({item,actions}){
+  return <article className="product">
+    <div className="photo"><Photo item={item}/></div>
+    <div className="product-body">
+      <small>{item.category} {item.subcategory&&' / '+item.subcategory}</small>
+      <h3>{item.name}</h3>
+      <strong className="price">{money(item.price)}</strong>
+      <span className={item.stock===0||item.available===false?'out':'stock'}>
+        {admin?item.stock+' available':item.available?'In stock':'Out of stock'}
+      </span>
+      {admin&&<small>{item.published?'Visible on website':'Hidden from website'}</small>}
+      {actions}
+    </div>
+  </article>;
+}
+
+function Catalogue(){
+  const [data,setData]=useState(null);
+  const [error,setError]=useState('');
+  const [query,setQuery]=useState('');
+  const [category,setCategory]=useState('All');
+  const [sub,setSub]=useState('All');
+  const [selected,setSelected]=useState(null);
+
+  async function load(){
+    setError('');
+    try{setData(await api('/api/catalogue'))}
+    catch(e){setError(e.message)}
+  }
+
+  useEffect(()=>{load()},[]);
+
+  const list=data?.products||[];
+  const subs=[...new Set(list
+    .filter(x=>category==='All'||x.category===category)
+    .map(x=>x.subcategory).filter(Boolean))];
+  const rows=list.filter(x=>
+    (category==='All'||x.category===category)&&
+    (sub==='All'||x.subcategory===sub)&&
+    x.name.toLowerCase().includes(query.toLowerCase())
+  );
+  const enquire=p=>`https://wa.me/${data.whatsapp}?text=${encodeURIComponent(
+    'Hello, I would like to enquire about '+p.name+' ('+money(p.price)+'). Product ID: '+p.id
+  )}`;
+
+  return <>
+    <header className="shop-header">
+      <a href="/" className="brand">
+        {data?.storeName||'CloudVibes'}
+        <small>Jewellery · Clothing · Home</small>
+      </a>
+      <a href="/admin" className="quiet-link">Store login</a>
+    </header>
+    <main className="shop">
+      <div className="heading">
+        <div><p className="eyebrow">THE COLLECTION</p><h1>Find something you love.</h1></div>
+      </div>
+      <div className="filters">
+        <input aria-label="Search products" placeholder="Search products" value={query} onChange={e=>setQuery(e.target.value)}/>
+        <select aria-label="Category" value={category} onChange={e=>{setCategory(e.target.value);setSub('All')}}>
+          <option>All</option>
+          {[...new Set(list.map(x=>x.category))].map(x=><option key={x}>{x}</option>)}
+        </select>
+        <select aria-label="Subcategory" value={sub} onChange={e=>setSub(e.target.value)}>
+          <option>All</option>
+          {subs.map(x=><option key={x}>{x}</option>)}
+        </select>
+      </div>
+      {error
+        ?<div className="notice">{error}<button onClick={load}>Try again</button></div>
+        :!data
+          ?<p>Loading products…</p>
+          :rows.length
+            ?<div className="products">
+              {rows.map(p=><ProductCard key={p.id} item={p} actions={
+                <button onClick={()=>setSelected(p)}>View product</button>
+              }/>)}
+            </div>
+            :<div className="empty">
+              <h2>{list.length?'No matching products':'Our collection is coming soon'}</h2>
+              <p>{list.length?'Try another category or search.':'New products will appear here as they are added.'}</p>
+            </div>
+      }
+    </main>
+    {selected&&<Dialog title={selected.name} onClose={()=>setSelected(null)}>
+      <div className="detail-photo"><Photo item={selected}/></div>
+      <p>{selected.description}</p>
+      <h2>{money(selected.price)}</h2>
+      <p>{selected.available?'In stock':'Currently out of stock'}</p>
+      {data.whatsapp
+        ?<a className="button primary" href={enquire(selected)} target="_blank" rel="noreferrer">Enquire on WhatsApp</a>
+        :<p>Online ordering is not available yet.</p>}
+    </Dialog>}
+  </>;
+}
+
+function Admin(){
+  const [db,setDb]=useState(null);
+  const [revision,setRevision]=useState(0);
+  const [error,setError]=useState('');
+  const [busy,setBusy]=useState(false);
+  const [view,setView]=useState('Home');
+  const [modal,setModal]=useState(null);
+  const [query,setQuery]=useState('');
+  const [cat,setCat]=useState('All');
+  const [stage,setStage]=useState('All');
+  const [notice,setNotice]=useState('');
+
+  async function load(){
+    setBusy(true);
+    setError('');
+    try{
+      const data=await api('/api/admin/state');
+      setDb(data.state);
+      setRevision(data.revision);
+    }catch(e){setError(e.message)}
+    finally{setBusy(false)}
+  }
+
+  useEffect(()=>{load()},[]);
+
+  async function change(fn){
+    if(busy)return;
+    setBusy(true);
+    setError('');
+    try{
+      const draft=structuredClone(db);
+      fn(draft);
+      validateState(draft);
+      const result=await api('/api/admin/state',{
+        method:'PUT',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify({state:draft,revision})
+      });
+      setDb(draft);
+      setRevision(result.revision);
+      setModal(null);
+      setNotice('Saved');
+      setTimeout(()=>setNotice(''),2500);
+    }catch(e){setError(e.message)}
+    finally{setBusy(false)}
+  }
+
+  const products=db?.items.filter(x=>x.type==='Product')||[];
+  const stats=db?metrics(db):{};
+  const filtered=db?.items.filter(x=>
+    (cat==='All'||x.category===cat)&&
+    [x.name,x.sku,x.subcategory].join(' ').toLowerCase().includes(query.toLowerCase())
+  )||[];
+  const tabs=['Home','Products','Sales','Purchases','Packaging','Expenses','Reports','Settings'];
+  const open=(type,item=null)=>{setError('');setModal({type,item})};
+
+  return <div className="admin-shell">
+    <aside>
+      <a className="brand" href="/">CloudVibes<small>SELLER STUDIO</small></a>
+      <nav>{tabs.map(t=><button className={view===t?'active':''} key={t} onClick={()=>{
+        setView(t);setQuery('');setCat('All');
+      }}>{t}</button>)}</nav>
+      <a href="/" target="_blank" className="store-link">View customer website</a>
+      <a href="/cdn-cgi/access/logout" className="store-link">Sign out</a>
+    </aside>
+    <main className="workspace">
+      <div className="heading">
+        <div><p className="eyebrow">YOUR SHOP</p><h1>{view}</h1></div>
+        {db&&<div className="actions">
+          <button onClick={()=>open('product')}>Add product</button>
+          <button onClick={()=>open('purchase')}>Add stock</button>
+          <button className="primary" onClick={()=>open('sale')}>Add sale</button>
+        </div>}
+      </div>
+      {error&&<div role="alert" className="notice error">
+        {error}<button onClick={load} disabled={busy}>Reload saved data</button>
+      </div>}
+      {notice&&<div role="status" className="toast">{notice}</div>}
+      {!db
+        ?<section className="empty">
+          <h2>{busy?'Loading your shop…':'Connect your shop'}</h2>
+          <p>Admin sign-in and database setup are required. See SETUP.md in the project package.</p>
+          <button onClick={load} disabled={busy}>Retry connection</button>
+        </section>
+        :<>
+          {view==='Home'&&<>
+            <div className="kpis">
+              {[['Sales',stats.revenue],['Net profit',stats.profit],['Stock value',stats.stockValue]].map(([label,v])=>
+                <div className="kpi" key={label}><span>{label}</span><strong>{money(v)}</strong><small>All recorded activity</small></div>
+              )}
+            </div>
+            <div className="split">
+              <section className="panel">
+                <h2>Ready for your next entry</h2>
+                <p>Choose a product, enter the quantity and save.</p>
+                <div className="actions">
+                  <button className="primary" onClick={()=>setView('Products')}>Browse products</button>
+                  <button onClick={()=>open('sale')}>Record a sale</button>
+                </div>
+              </section>
+              <section className="panel">
+                <h2>Needs attention</h2>
+                <p><b>{db.orders.filter(o=>['New','Ready to Dispatch'].includes(o.status)).length}</b> orders to dispatch</p>
+                <p><b>{products.filter(p=>p.stock<=p.reorder).length}</b> products low on stock</p>
+              </section>
+            </div>
+            <section className="panel">
+              <h2>Recent sales</h2>
+              {db.orders.slice(0,5).map(o=><SaleRow key={o.id} order={o} onOpen={()=>setView('Sales')}/>)}
+              {!db.orders.length&&<p>No sales yet. Your first sale starts here.</p>}
+            </section>
+          </>}
+
+          {(view==='Products'||view==='Packaging')&&<>
+            <div className="filters">
+              <input aria-label="Search inventory" placeholder="Search name or SKU" value={query} onChange={e=>setQuery(e.target.value)}/>
+              <select aria-label="Category" value={cat} onChange={e=>setCat(e.target.value)}>
+                <option>All</option>{categories.map(c=><option key={c}>{c}</option>)}
+              </select>
+              {view==='Packaging'&&<button onClick={()=>open('product',{type:'Packaging'})}>Add packaging</button>}
+            </div>
+            <div className="products">
+              {filtered.filter(x=>x.type===(view==='Packaging'?'Packaging':'Product')).map(p=>
+                <ProductCard key={p.id} item={p} actions={<div className="card-actions">
+                  {p.type==='Product'&&<button className="primary" disabled={!p.stock} onClick={()=>open('sale',p)}>Sell</button>}
+                  <button onClick={()=>open('purchase',p)}>Buy stock</button>
+                  <button onClick={()=>open('product',p)}>Edit</button>
+                  <button onClick={()=>open('adjust',p)}>Damage / loss</button>
+                </div>}/>
+              )}
+            </div>
+            {!db.items.some(p=>p.type===(view==='Packaging'?'Packaging':'Product'))&&
+              <section className="empty">
+                <h2>{view==='Packaging'?'Add your packaging supplies':'Add your first product'}</h2>
+                <p>Start with a name, photo, cost, price and available quantity.</p>
+                <button className="primary" onClick={()=>open('product',view==='Packaging'?{type:'Packaging'}:null)}>
+                  Add {view==='Packaging'?'packaging':'product'}
+                </button>
+              </section>}
+          </>}
+
+          {view==='Sales'&&<>
+            <div className="filters">
+              <input aria-label="Search sales" placeholder="Search customer, product or order" value={query} onChange={e=>setQuery(e.target.value)}/>
+              <select aria-label="Order status" value={stage} onChange={e=>setStage(e.target.value)}>
+                {['All','New','Ready to Dispatch','Dispatched','Delivered','Returned','Cancelled'].map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+            {db.orders.filter(o=>
+              (stage==='All'||o.status===stage)&&
+              [o.name,o.ref,o.customer].join(' ').toLowerCase().includes(query.toLowerCase())
+            ).map(o=><SaleRow key={o.id} order={o} actions={<>
+              <select aria-label={'Status for '+o.ref} value={o.status} disabled={busy||['Returned','Cancelled'].includes(o.status)}
+                onChange={e=>change(d=>advanceStatus(d,o.id,e.target.value))}>
+                {[...new Set(['New','Ready to Dispatch','Dispatched','Delivered',o.status])].map(x=><option key={x}>{x}</option>)}
+              </select>
+              {financials(o).netQty>0&&<button onClick={()=>open('return',o)}>Return</button>}
+              {['New','Ready to Dispatch'].includes(o.status)&&!o.resellable&&!o.damagedReturn&&
+                <button disabled={busy} onClick={()=>{
+                  if(confirm('Cancel this unshipped sale? Product and unused packaging stock will be restored.'))
+                    change(d=>cancelSale(d,o.id));
+                }}>Cancel</button>}
+            </>}/>)}
+            {!db.orders.length&&<div className="empty">No sales recorded.</div>}
+          </>}
+
+          {view==='Purchases'&&<section className="panel">
+            <h2>Purchase history</h2>
+            <div className="table-wrap"><table>
+              <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit cost</th><th>Total</th><th>Supplier</th></tr></thead>
+              <tbody>{db.purchases.map(p=><tr key={p.id}>
+                <td>{p.date}</td><td>{p.name}</td><td>{p.qty}</td><td>{money(p.cost)}</td><td>{money(p.total)}</td><td>{p.vendor}</td>
+              </tr>)}</tbody>
+            </table></div>
+            {!db.purchases.length&&<p>No purchases yet.</p>}
+          </section>}
+
+          {view==='Expenses'&&<section className="panel">
+            <div className="heading"><h2>Business expenses</h2><button onClick={()=>open('expense')}>Add expense</button></div>
+            {db.expenses.map(x=><div className="sale-row" key={x.id}><span>{x.date} · {x.name}</span><strong>{money(x.amount)}</strong></div>)}
+            {!db.expenses.length&&<p>No expenses yet.</p>}
+          </section>}
+
+          {view==='Reports'&&<>
+            <div className="kpis">
+              {[['Revenue',stats.revenue],['Direct costs',stats.direct],['Damage / stock losses',stats.writeoff],
+                ['Business expenses',stats.overhead],['Net profit',stats.profit],['Stock value',stats.stockValue]].map(([t,v])=>
+                <div className="kpi" key={t}><span>{t}</span><strong>{money(v)}</strong></div>
+              )}
+            </div>
+            <section className="panel">
+              <h2>Product performance</h2>
+              <div className="table-wrap"><table>
+                <thead><tr><th>Product</th><th>Net units</th><th>Revenue</th><th>Order profit</th><th>Balance</th></tr></thead>
+                <tbody>{products.map(p=>{
+                  const f=db.orders.filter(o=>o.productId===p.id).map(financials);
+                  return <tr key={p.id}>
+                    <td>{p.name}</td>
+                    <td>{f.reduce((s,x)=>s+x.netQty,0)}</td>
+                    <td>{money(f.reduce((s,x)=>s+x.revenue,0))}</td>
+                    <td>{money(f.reduce((s,x)=>s+x.profit,0))}</td>
+                    <td>{p.stock}</td>
+                  </tr>;
+                })}</tbody>
+              </table></div>
+              <p className="hint">Order profit includes product, packaging, entered fees, delivery charges and returns. Business expenses and stock losses are deducted separately above. Enter actual platform charges; fees and tax are not fetched automatically.</p>
+            </section>
+          </>}
+
+          {view==='Settings'&&<section className="panel">
+            <h2>Customer website</h2>
+            <form onSubmit={e=>{
+              e.preventDefault();
+              const f=new FormData(e.currentTarget);
+              change(d=>{d.settings={...d.settings,storeName:f.get('storeName'),whatsapp:f.get('whatsapp')}});
+            }}>
+              <div className="form-grid">
+                <Input label="Store name" name="storeName" required defaultValue={db.settings.storeName}/>
+                <Input label="WhatsApp number, country code included" name="whatsapp" defaultValue={db.settings.whatsapp}
+                  placeholder="919876543210" pattern="[0-9]{10,15}"/>
+              </div>
+              <button className="primary" disabled={busy}>Save settings</button>
+            </form>
+            <hr/><h2>Backup</h2>
+            <button onClick={()=>{
+              const a=document.createElement('a');
+              const url=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));
+              a.href=url;
+              a.download='cloudvibes-backup-'+today()+'.json';
+              a.click();
+              setTimeout(()=>URL.revokeObjectURL(url),1000);
+            }}>Download backup</button>
+            <p className="hint">Inventory is saved in your database. A backup includes private business records.</p>
+          </section>}
+        </>
+      }
+      {db&&modal&&<EntryDialog modal={modal} db={db} busy={busy} change={change}
+        onClose={()=>setModal(null)} onError={setError} error={error}/>}
+    </main>
+  </div>;
+}
+
+function SaleRow({order:o,actions,onOpen}){
+  const f=financials(o);
+  return <article className="sale-row">
+    <div className="sale-info">
+      <strong>{o.name}</strong>
+      <small>{o.ref} · {o.customer||o.channel} · {o.date}</small>
+      <span>{f.netQty} units · {o.status}
+        {o.resellable+o.damagedReturn>0?' · '+(o.resellable+o.damagedReturn)+' returned':''}
+      </span>
+    </div>
+    <div><strong>{money(f.revenue)}</strong><small>Profit {money(f.profit)}</small></div>
+    <div className="card-actions">{actions}{onOpen&&<button onClick={onOpen}>Manage</button>}</div>
+  </article>;
+}
+
+function EntryDialog({modal,db,busy,change,onClose,onError,error}){
+  const p=modal.item||{};
+  const kind=modal.type;
+  const [selected,setSelected]=useState(p.id||db.items.find(x=>kind==='sale'?x.type==='Product':true)?.id||'');
+  const [qty,setQty]=useState(1);
+  const [price,setPrice]=useState(p.price??db.items.find(x=>x.id===selected)?.price??0);
+  const [fee,setFee]=useState(0);
+  const [shipping,setShipping]=useState(0);
+  const [other,setOther]=useState(0);
+  const [recipe,setRecipe]=useState(p.recipe||[]);
+  const item=db.items.find(x=>x.id===selected);
+  const packCost=(item?.recipe||[]).reduce((s,r)=>
+    s+(db.items.find(x=>x.id===r.itemId)?.cost||0)*r.qty,0)*qty;
+  const titles={
+    product:p.id?'Edit product':'Add product',
+    purchase:'Add stock',
+    sale:'Add sale',
+    return:'Record return',
+    adjust:'Record damage or loss',
+    expense:'Add expense'
+  };
+
+  async function submit(e){
+    e.preventDefault();
+    const f=new FormData(e.currentTarget);
+    const n=k=>Number(f.get(k)||0);
+    const s=k=>String(f.get(k)||'').trim();
+    const image=kind==='product'?s('image'):p.image||'';
+
+    await change(d=>{
+      if(kind==='product'){
+        const input={
+          name:s('name'),type:s('type'),category:s('category'),subcategory:s('subcategory'),
+          sku:s('sku'),description:s('description'),price:n('price'),cost:n('cost'),
+          qty:n('qty'),reorder:n('reorder'),published:f.get('published')==='on',image,recipe
+        };
+        if(p.id){
+          const existing=d.items.find(x=>x.id===p.id);
+          Object.assign(existing,{
+            name:input.name,category:input.category,subcategory:input.subcategory,
+            sku:input.sku,description:input.description,price:input.price,
+            reorder:input.reorder,published:input.published,image,recipe
+          });
+        }else addProduct(d,input);
+      }else if(kind==='purchase'){
+        buy(d,selected,n('qty'),n('cost'),n('extra'),s('date'),s('vendor'));
+      }else if(kind==='sale'){
+        sale(d,{
+          productId:selected,qty:+qty,price:+price,fee:+fee,shipping:+shipping,other:+other,
+          date:s('date'),ref:s('ref'),customer:s('customer'),phone:s('phone'),channel:s('channel')
+        });
+      }else if(kind==='return'){
+        returnSale(d,p.id,n('qty'),f.get('resellable')==='yes',n('returnCost'),n('refund'));
+      }else if(kind==='adjust'){
+        adjust(d,p.id,n('qty'),s('lossType'),s('note'),s('date'));
+      }else if(kind==='expense'){
+        d.expenses.unshift({id:id(),date:s('date'),name:s('name'),amount:n('amount')});
+      }
+    });
+  }
+
+  return <Dialog title={titles[kind]} onClose={onClose}>
+    {error&&<div role="alert" className="notice error">{error}</div>}
+    <form onSubmit={submit}>
+      <div className="form-grid">
+        {kind==='product'&&<>
+          <Input label="Product / item name" name="name" defaultValue={p.name} required/>
+          <Field label="Item type">
+            <select name="type" defaultValue={p.type||'Product'} disabled={!!p.id}>
+              <option>Product</option><option>Packaging</option>
+            </select>
+            {p.id&&<input type="hidden" name="type" value={p.type}/>}
+          </Field>
+          <Field label="Category">
+            <select name="category" defaultValue={p.category||'Jewellery'}>
+              {categories.map(c=><option key={c}>{c}</option>)}
+            </select>
+          </Field>
+          <Input label="Subcategory (Bangles, Rings, Sarees…)" name="subcategory" defaultValue={p.subcategory}/>
+          <Input label="Selling price / unit" name="price" type="number" min="0" step="0.01" defaultValue={p.price||0} required/>
+          {!p.id&&<>
+            <Input label="Available quantity" name="qty" type="number" min="0" step="1" defaultValue="0" required/>
+            <Input label="Purchase cost / unit" name="cost" type="number" min="0" step="0.01" defaultValue="0" required/>
+          </>}
+          <Input label="Photo link or path (optional)" name="image" type="text" defaultValue={p.image||''}
+            placeholder="/assets/cloudvibes/photo.jpg or https://…"/>
+          <label className="checkbox">
+            <input name="published" type="checkbox" defaultChecked={p.published||false}/>Show on customer website
+          </label>
+          <Field label="Description"><textarea name="description" defaultValue={p.description||''}/></Field>
+          <Input label="SKU (optional)" name="sku" defaultValue={p.sku}/>
+          <Input label="Low-stock reminder quantity" name="reorder" type="number" min="0" defaultValue={p.reorder??5}/>
+        </>}
+
+        {(kind==='purchase'||kind==='sale')&&<Field label={kind==='sale'?'Product':'Item'}>
+          <select required value={selected} onChange={e=>{
+            setSelected(e.target.value);
+            setPrice(db.items.find(x=>x.id===e.target.value)?.price||0);
+          }}>
+            <option value="">Choose an item</option>
+            {db.items.filter(x=>kind==='sale'?x.type==='Product':true).map(x=>
+              <option key={x.id} value={x.id}>{x.name} ({x.stock} available)</option>
+            )}
+          </select>
+        </Field>}
+
+        {kind==='sale'&&<>
+          <Field label="Quantity">
+            <input required type="number" min="1" step="1" value={qty} onChange={e=>setQty(e.target.value)}/>
+          </Field>
+          <Field label="Selling price / unit">
+            <input required type="number" min="0" step="0.01" value={price} onChange={e=>setPrice(e.target.value)}/>
+          </Field>
+          <Field label="Sales channel">
+            <select name="channel">
+              <option>Amazon</option><option>WhatsApp / Instagram</option>
+              <option>Offline / Direct</option><option>Website</option><option>Other Marketplace</option>
+            </select>
+          </Field>
+          <Input label="Order reference" name="ref" required defaultValue={'CV-'+Date.now().toString(36).toUpperCase()}/>
+          <Input label="Customer name (optional)" name="customer"/>
+          <Input label="Phone (optional)" name="phone" type="tel"/>
+        </>}
+
+        {kind==='purchase'&&<>
+          <Input label="Quantity purchased" name="qty" type="number" min="1" step="1" required/>
+          <Input label="Cost / unit" name="cost" type="number" min="0" step="0.01" defaultValue={item?.cost||0} key={selected} required/>
+          <Input label="Delivery / other purchase cost" name="extra" type="number" min="0" step="0.01" defaultValue="0"/>
+          <Input label="Supplier (optional)" name="vendor"/>
+        </>}
+
+        {kind==='return'&&<>
+          <p className="wide">{p.name} · {financials(p).netQty} units eligible for return</p>
+          <Input label="Return quantity" name="qty" type="number" min="1" max={financials(p).netQty} step="1" defaultValue="1" required/>
+          <Field label="Returned item condition">
+            <select name="resellable">
+              <option value="yes">Resellable — restore stock</option>
+              <option value="no">Damaged — do not restore stock</option>
+            </select>
+          </Field>
+          <Input label="Additional return charges" name="returnCost" type="number" min="0" step="0.01" defaultValue="0"/>
+          <Input label="Fees / delivery charges refunded" name="refund" type="number" min="0" step="0.01" defaultValue="0"/>
+        </>}
+
+        {kind==='adjust'&&<>
+          <p>{p.name} · {p.stock} available</p>
+          <Input label="Quantity lost" name="qty" type="number" min="1" max={p.stock} step="1" required/>
+          <Field label="Reason">
+            <select name="lossType"><option>Damaged</option><option>Quality rejected</option><option>Missing stock</option></select>
+          </Field>
+          <Input label="Notes" name="note"/>
+        </>}
+
+        {kind==='expense'&&<>
+          <Input label="Expense name" name="name" required/>
+          <Input label="Amount" name="amount" type="number" min="0" step="0.01" required/>
+        </>}
+
+        {['purchase','sale','adjust','expense'].includes(kind)&&
+          <Input label="Date" name="date" type="date" defaultValue={today()} required/>}
+      </div>
+
+      {kind==='product'&&p.type!=='Packaging'&&<details>
+        <summary>Packaging used per unit</summary>
+        {db.items.filter(x=>x.type==='Packaging').length
+          ?db.items.filter(x=>x.type==='Packaging').map(m=>{
+            const r=recipe.find(x=>x.itemId===m.id);
+            return <div className="recipe" key={m.id}>
+              <label>
+                <input type="checkbox" checked={!!r} onChange={e=>setRecipe(
+                  e.target.checked?[...recipe,{itemId:m.id,qty:1}]:recipe.filter(x=>x.itemId!==m.id)
+                )}/>{m.name}
+              </label>
+              {r&&<input aria-label={'Quantity of '+m.name} type="number" min="1" step="1" value={r.qty}
+                onChange={e=>setRecipe(recipe.map(x=>x.itemId===m.id?{...x,qty:+e.target.value}:x))}/>}
+            </div>;
+          })
+          :<p>Add packaging supplies from the Packaging tab first.</p>}
+      </details>}
+
+      {kind==='sale'&&<>
+        <details>
+          <summary>Packaging and charges</summary>
+          <p>Packaging is filled from the product setup: {money(packCost)}. Charges below are for the entire order.</p>
+          <div className="form-grid">
+            {[['Marketplace / payment fees',fee,setFee],['Delivery charges',shipping,setShipping],
+              ['Other costs',other,setOther]].map(([label,v,set])=>
+              <Field key={label} label={label}>
+                <input type="number" min="0" step="0.01" value={v} onChange={e=>set(e.target.value)}/>
+              </Field>
+            )}
+          </div>
+        </details>
+        <div className="sale-preview">
+          <span>Sale <b>{money(qty*price)}</b></span>
+          <span>Cost <b>{money(qty*(item?.cost||0)+packCost+(+fee)+(+shipping)+(+other))}</b></span>
+          <span>Profit <b>{money(qty*price-qty*(item?.cost||0)-packCost-fee-shipping-other)}</b></span>
+        </div>
+      </>}
+
+      {kind==='return'&&<p className="hint">
+        Product costs reverse only for resellable items. Used packaging and charges remain costs unless refunded.
+      </p>}
+
+      <footer>
+        <button type="button" onClick={onClose}>Close</button>
+        <button className="primary" disabled={busy}>{busy?'Saving…':'Save'}</button>
+      </footer>
+    </form>
+  </Dialog>;
+}
+
 createRoot(document.getElementById('root')).render(admin?<Admin/>:<Catalogue/>);
