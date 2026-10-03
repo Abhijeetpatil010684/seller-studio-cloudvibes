@@ -9,7 +9,8 @@ export const emptyState = () => ({
 
 export const today = () => {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1)
+    .padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
 export const id = () => crypto.randomUUID();
@@ -40,12 +41,8 @@ export function financials(o) {
   const revenue = netQty * o.price;
   const cost =
     (o.qty - rr) * o.unitCost +
-    o.packCost +
-    o.fee +
-    o.shipping +
-    o.other +
-    (o.returnCost || 0) -
-    (o.feeRefund || 0);
+    o.packCost + o.fee + o.shipping + o.other +
+    (o.returnCost || 0) - (o.feeRefund || 0);
 
   return { netQty, revenue, cost, profit: revenue - cost };
 }
@@ -54,8 +51,12 @@ export function metrics(db) {
   const f = db.orders.map(financials);
   const revenue = f.reduce((s, x) => s + x.revenue, 0);
   const direct = f.reduce((s, x) => s + x.cost, 0);
-  const writeoff = db.adjustments.reduce((s, x) => s + (x.loss || 0), 0);
-  const overhead = db.expenses.reduce((s, x) => s + x.amount, 0);
+  const writeoff = db.adjustments.reduce(
+    (s, x) => s + (x.loss || 0), 0
+  );
+  const overhead = db.expenses.reduce(
+    (s, x) => s + x.amount, 0
+  );
 
   return {
     revenue,
@@ -63,7 +64,9 @@ export function metrics(db) {
     writeoff,
     overhead,
     profit: revenue - direct - writeoff - overhead,
-    stockValue: db.items.reduce((s, x) => s + x.stock * x.cost, 0)
+    stockValue: db.items.reduce(
+      (s, x) => s + x.stock * x.cost, 0
+    )
   };
 }
 
@@ -124,10 +127,14 @@ export function sale(db, input) {
   const p = db.items.find(x => x.id === input.productId);
   const q = input.qty;
 
-  if (!p || p.type !== 'Product') throw Error('Choose a product');
+  if (!p || p.type !== 'Product') {
+    throw Error('Choose a product');
+  }
+
   if (!Number.isInteger(q) || q < 1 || p.stock < q) {
     throw Error('Not enough stock, or invalid quantity');
   }
+
   if (db.orders.some(x => x.ref === input.ref)) {
     throw Error('This order reference already exists');
   }
@@ -194,7 +201,8 @@ export function returnSale(
   }
 
   if (resellable) {
-    p.cost = (p.stock * p.cost + qty * o.unitCost) / (p.stock + qty);
+    p.cost =
+      (p.stock * p.cost + qty * o.unitCost) / (p.stock + qty);
     p.stock += qty;
     o.resellable += qty;
   } else {
@@ -206,18 +214,17 @@ export function returnSale(
   o.status = financials(o).netQty === 0 ? 'Returned' : o.status;
   o.returns = o.returns || [];
   o.returns.push({
-    date: today(),
-    qty,
-    resellable,
-    returnCost,
-    feeRefund
+    date: today(), qty, resellable, returnCost, feeRefund
   });
 }
 
 export function cancelSale(db, oid) {
   const o = db.orders.find(x => x.id === oid);
 
-  if (!o || o.status === 'Cancelled' || o.resellable || o.damagedReturn) {
+  if (
+    !o || o.status === 'Cancelled' ||
+    o.resellable || o.damagedReturn
+  ) {
     throw Error('This sale cannot be cancelled');
   }
 
@@ -226,12 +233,14 @@ export function cancelSale(db, oid) {
   }
 
   const p = db.items.find(x => x.id === o.productId);
-  p.cost = (p.stock * p.cost + o.qty * o.unitCost) / (p.stock + o.qty);
+  p.cost =
+    (p.stock * p.cost + o.qty * o.unitCost) / (p.stock + o.qty);
   p.stock += o.qty;
 
   for (const l of o.packaging) {
     const m = db.items.find(x => x.id === l.itemId);
-    m.cost = (m.stock * m.cost + l.qty * l.cost) / (m.stock + l.qty);
+    m.cost =
+      (m.stock * m.cost + l.qty * l.cost) / (m.stock + l.qty);
     m.stock += l.qty;
   }
 
@@ -260,7 +269,9 @@ export function adjust(db, pid, qty, type, note, date) {
 }
 
 export function isValidImage(value) {
-  if (typeof value !== 'string' || value.length > 2048) return false;
+  if (typeof value !== 'string' || value.length > 2048) {
+    return false;
+  }
 
   if (/^\/(?!\/)[^\s\\?#]+$/.test(value)) return true;
 
@@ -280,6 +291,7 @@ export function validateState(db) {
     !Array.isArray(db.purchases) ||
     !Array.isArray(db.adjustments) ||
     !Array.isArray(db.expenses) ||
+    !db.settings ||
     typeof db.settings !== 'object'
   ) {
     throw Error('Invalid inventory data');
@@ -308,6 +320,40 @@ export function validateState(db) {
       throw Error('Invalid image reference');
     }
 
+    if (p.media !== undefined) {
+      if (!Array.isArray(p.media) || p.media.length > 12) {
+        throw Error('Maximum 12 media files per product');
+      }
+
+      for (const m of p.media) {
+        if (
+          !m ||
+          !['image', 'video'].includes(m.type) ||
+          !isValidImage(m.url)
+        ) {
+          throw Error('Invalid media reference');
+        }
+
+        if (m.type === 'video') {
+          let u;
+
+          try {
+            u = new URL(m.url);
+          } catch {
+            throw Error('Invalid video link');
+          }
+
+          if (
+            u.protocol !== 'https:' ||
+            u.hostname !== 'res.cloudinary.com' ||
+            !u.pathname.includes('/video/upload/')
+          ) {
+            throw Error('Invalid video link');
+          }
+        }
+      }
+    }
+
     if (!Array.isArray(p.recipe)) {
       throw Error('Invalid packaging setup');
     }
@@ -321,13 +367,16 @@ export function validateState(db) {
       ) {
         throw Error('Invalid packaging quantity');
       }
+
       seen.add(r.itemId);
     }
   }
 
   for (const p of db.items) {
     for (const r of p.recipe) {
-      if (!db.items.some(m => m.id === r.itemId && m.type === 'Packaging')) {
+      if (!db.items.some(m =>
+        m.id === r.itemId && m.type === 'Packaging'
+      )) {
         throw Error('Packaging item not found');
       }
     }
@@ -335,8 +384,9 @@ export function validateState(db) {
 
   for (const o of db.orders) {
     for (const k of [
-      'qty', 'price', 'unitCost', 'packCost', 'fee', 'shipping',
-      'other', 'resellable', 'damagedReturn', 'returnCost', 'feeRefund'
+      'qty', 'price', 'unitCost', 'packCost', 'fee',
+      'shipping', 'other', 'resellable', 'damagedReturn',
+      'returnCost', 'feeRefund'
     ]) {
       if (!Number.isFinite(o[k]) || o[k] < 0) {
         throw Error('Invalid sale values');
@@ -371,12 +421,19 @@ export function publicProducts(db) {
       description: x.description || '',
       price: x.price,
       image: x.image || '',
+      media: (x.media || []).map(m => ({
+        type: m.type,
+        url: m.url
+      })),
       available: x.stock > 0
     }));
 }
 
 export function advanceStatus(db, oid, status) {
-  const stages = ['New', 'Ready to Dispatch', 'Dispatched', 'Delivered'];
+  const stages = [
+    'New', 'Ready to Dispatch', 'Dispatched', 'Delivered'
+  ];
+
   const o = db.orders.find(x => x.id === oid);
 
   if (
@@ -385,7 +442,10 @@ export function advanceStatus(db, oid, status) {
     !stages.includes(status) ||
     stages.indexOf(status) < stages.indexOf(o.status)
   ) {
-    throw Error('Order status cannot move backwards. Use a return for dispatched orders.');
+    throw Error(
+      'Order status cannot move backwards. ' +
+      'Use a return for dispatched orders.'
+    );
   }
 
   o.status = status;
