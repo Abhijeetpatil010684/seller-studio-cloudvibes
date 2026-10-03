@@ -1,8 +1,1 @@
-{
-  "name": "seller-studio-v7-5-cloudvibes",
-  "private": true,
-  "version": "7.5.0",
-  "scripts": {
-    "build": "rm -rf dist && mkdir -p dist && cp index.html dist/index.html && cp -r assets dist/assets && cp _headers dist/_headers && cp _redirects dist/_redirects"
-  }
-}
+{"name":"cloudvibes-seller-studio","private":true,"version":"9.0.0","type":"module","scripts":{"dev":"vite --host 0.0.0.0","build":"vite build","preview":"vite preview --host 0.0.0.0","test":"node --test tests/*.test.js","pages:dev":"npm run build && wrangler pages dev dist","functions:check":"wrangler pages functions build functions --outdir .functions-build"},"dependencies":{"react":"^19.0.0","react-dom":"^19.0.0","jose":"^6.0.0"},"devDependencies":{"vite":"^7.0.0","wrangler":"^4.0.0"},"engines":{"node":">=22"}}
